@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="CTF,web,密码学," />
 
 
 
@@ -80,10 +80,11 @@
 
 
 <meta name="description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个">
+<meta name="keywords" content="CTF,web,密码学">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CBC字节翻转攻击">
 <meta property="og:url" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="virtua1&#39;s blog">
 <meta property="og:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://img-blog.csdn.net/20180702090439153?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMzk4NjIy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
@@ -100,7 +101,7 @@
 <meta property="og:image" content="https://img-blog.csdn.net/2018070209090789?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMzk4NjIy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
 <meta property="og:image" content="https://img-blog.csdn.net/20180702090916775?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMzk4NjIy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
 <meta property="og:image" content="https://img-blog.csdn.net/20180702090923391?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxMzk4NjIy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
-<meta property="og:updated_time" content="2018-07-02T01:11:39.140Z">
+<meta property="og:updated_time" content="2018-07-02T01:19:48.194Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="CBC字节翻转攻击">
 <meta name="twitter:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个">
@@ -140,7 +141,7 @@
 
 
 
-  <title>CBC字节翻转攻击 | Hexo</title>
+  <title>CBC字节翻转攻击 | virtua1's blog</title>
   
 
 
@@ -170,7 +171,7 @@
     <div class="custom-logo-site-title">
       <a href="/"  class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
+        <span class="site-title">virtua1's blog</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -201,6 +202,36 @@
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
             首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
           </a>
         </li>
       
@@ -256,7 +287,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
+      <meta itemprop="name" content="virtua1's blog">
     </span>
 
     
@@ -338,6 +369,16 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/CTF/" rel="tag"># CTF</a>
+          
+            <a href="/tags/web/" rel="tag"># web</a>
+          
+            <a href="/tags/密码学/" rel="tag"># 密码学</a>
+          
+        </div>
+      
 
       
       
@@ -413,7 +454,7 @@
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <p class="site-author-name" itemprop="name">virtua1</p>
-              <p class="site-description motion-element" itemprop="description"></p>
+              <p class="site-description motion-element" itemprop="description">day day up</p>
           </div>
 
           <nav class="site-state motion-element">
@@ -431,6 +472,15 @@
 
             
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
             
 
           </nav>
