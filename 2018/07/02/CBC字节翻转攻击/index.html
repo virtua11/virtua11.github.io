@@ -93,13 +93,13 @@
 
 
 
-<meta name="description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。">
+<meta name="description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。 1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每">
 <meta name="keywords" content="CTF,web,密码学">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CBC字节翻转攻击">
 <meta property="og:url" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/index.html">
 <meta property="og:site_name" content="virtua1&#39;s blog">
-<meta property="og:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。">
+<meta property="og:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。 1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image001.png">
 <meta property="og:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image002.png">
@@ -116,10 +116,10 @@
 <meta property="og:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image013.png">
 <meta property="og:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image014.png">
 <meta property="og:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image015.png">
-<meta property="og:updated_time" content="2018-07-04T01:09:03.992Z">
+<meta property="og:updated_time" content="2018-07-04T01:23:33.351Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="CBC字节翻转攻击">
-<meta name="twitter:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。">
+<meta name="twitter:description" content="前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。 1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每">
 <meta name="twitter:image" content="http://yoursite.com/2018/07/02/CBC字节翻转攻击/CBC字节翻转攻击/image001.png">
 
 
@@ -382,7 +382,8 @@
       
 
       
-        <p>前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。<br><a id="more"></a><br>1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下：<br> <img src="CBC字节翻转攻击/image001.png" alt="这里写图片描述"><br>IV：初始化向量。<br>plaintext：明文分组。<br>cipertext：密文分组。<br>key：密钥。<br>CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。<br>简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个明文分组与前一个密文分组进行XOR运算再通过key加密得到密文，其中第一组明文与初始化向量IV进行XOR运算得到第一组密文。<br>最后将IV与得到的密文拼接得到最终的密文。<br>从加密的方式我们不难发现各组都是有关联的，这是与ECB得不同之处，与ECB比较相对比较安全。<br>其解密过程：<br> <img src="CBC字节翻转攻击/image002.png" alt="这里写图片描述"><br>理解了加密，解密也容易理解，就是加密得逆过程：从密文中提取出IV，然后分组，每组密文先用key解密，然后再与上一组得密文XOR运算得到明文，其中第一组用key解密之后再和IV XOR运算得到明文。</p>
+        <p>前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。</p>
+<p>1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下：<br> <img src="CBC字节翻转攻击/image001.png" alt="这里写图片描述"><br>IV：初始化向量。<br>plaintext：明文分组。<br>cipertext：密文分组。<br>key：密钥。<br>CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。<br>简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个明文分组与前一个密文分组进行XOR运算再通过key加密得到密文，其中第一组明文与初始化向量IV进行XOR运算得到第一组密文。<br>最后将IV与得到的密文拼接得到最终的密文。<br>从加密的方式我们不难发现各组都是有关联的，这是与ECB得不同之处，与ECB比较相对比较安全。<br>其解密过程：<br> <img src="CBC字节翻转攻击/image002.png" alt="这里写图片描述"><br>理解了加密，解密也容易理解，就是加密得逆过程：从密文中提取出IV，然后分组，每组密文先用key解密，然后再与上一组得密文XOR运算得到明文，其中第一组用key解密之后再和IV XOR运算得到明文。</p>
 <p>2、从CBC模式得原理我们不难发现 如果我们想改变解密后的某一明文，得到我们想得到得明文，如果是第一组，只需要改变IV，否则只需要改变上一组密文，就可以控制我们得到的明文。<br>如下图：<br><img src="CBC字节翻转攻击/image003.png" alt="这里写图片描述"><br>我们要改变1处想要得到特定明文，就可以修改2处的密文，这就是CBC字节翻转攻击的简单理解。<br>3、利用CBC字节翻转攻击的题目往往是修改密文，使密文修改后解密得到我们想得到的明文，绕过限制。<br>这类题目的源码都是差不多的，以下面源码为例分析一下：<br> <img src="CBC字节翻转攻击/image004.png" alt="这里写图片描述"><br> <img src="CBC字节翻转攻击/image005.jpg" alt="这里写图片描述"><br> <img src="CBC字节翻转攻击/image006.png" alt="这里写图片描述"><br> <img src="CBC字节翻转攻击/image007.jpg" alt="这里写图片描述"><br>源码的意思是，随机产生初始化向量IV<br>把输入的username序列化 然后加密 IV也加密<br>解密并验证 如果username为admin 则输出flag<br>但是后边限制了post的username 不能为admin<br>我们便可以用CBC字节翻转攻击绕过这种限制，也就是修改加密后username 使其解密后为admin 得到flag。<br>3、例题：（ISCC2018. Only admin can see flag）</p>
 <p>根据提示在index.txt 看到源码：<br> <img src="CBC字节翻转攻击/image008.png" alt="这里写图片描述"><br> <img src="CBC字节翻转攻击/image009.png" alt="这里写图片描述"><br>审计代码，发现admin登陆才可以得到flag，但是又限制post的username不能为admin，很显然要用CBC字节翻转攻击，先用abmin 登陆，再根据攻击原理改为admin。</p>
 <p>用username=abmin 登陆，bp抓包：<br> <img src="CBC字节翻转攻击/image010.png" alt="这里写图片描述"><br>得到IV 和cipher。</p>
