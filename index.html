@@ -276,7 +276,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql注入--敏感函数 MD5()的利用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql注入--敏感函数/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="virtua1">
@@ -295,7 +295,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/07/05/sql注入--敏感函数 MD5()的利用/" itemprop="url">sql注入--敏感函数 MD5()的利用</a></h1>
+                <a class="post-title-link" href="/2018/07/05/sql注入--敏感函数/" itemprop="url">sql注入--敏感函数 MD5()的利用</a></h1>
         
 
         <div class="post-meta">
@@ -369,7 +369,7 @@
       
         
           
-            <p>突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD<br>界面是这样的:<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image1.png" alt="login界面"><br>看下源码：<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image2.png" alt="查看源码"><br>提交password 然后数据库查询，查询的时候用到这个 </p>
+            <p>突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD<br>界面是这样的:<br> <img src="/2018/07/05/sql注入--敏感函数/image1.png" alt=""><br>看下源码：<br> <img src="/2018/07/05/sql注入--敏感函数/image2.png" alt=""><br>提交password 然后数据库查询，查询的时候用到这个 </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">password = &apos;&quot;.md5($password,true).&quot;&apos;</span><br></pre></td></tr></table></figure>
 <p>假如查询语句是： </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;$_post(password)&apos;&quot;;</span><br></pre></td></tr></table></figure>
