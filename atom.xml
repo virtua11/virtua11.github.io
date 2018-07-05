@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-07-05T01:34:52.520Z</updated>
+  <updated>2018-07-05T05:48:55.160Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,37 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>sql注入--敏感函数 MD5()的利用</title>
+    <link href="http://yoursite.com/2018/07/05/sql%E6%B3%A8%E5%85%A5--%E6%95%8F%E6%84%9F%E5%87%BD%E6%95%B0%20MD5()%E7%9A%84%E5%88%A9%E7%94%A8/"/>
+    <id>http://yoursite.com/2018/07/05/sql注入--敏感函数 MD5()的利用/</id>
+    <published>2018-07-05T05:35:49.367Z</published>
+    <updated>2018-07-05T05:48:55.160Z</updated>
+    
+    <content type="html"><![CDATA[<p>突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD<br>界面是这样的:<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image1.png" alt="login界面"><br>看下源码：<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image2.png" alt="查看源码"><br>提交password 然后数据库查询，查询的时候用到这个 </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">password = &apos;&quot;.md5($password,true).&quot;&apos;</span><br></pre></td></tr></table></figure><p>假如查询语句是： </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;$_post(password)&apos;&quot;;</span><br></pre></td></tr></table></figure><p>我们很容易就绕过了–‘ or ‘1’=’1  或 ‘or 1=1;–</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;1&apos;=&apos;1&apos;&quot;;</span><br><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or 1=1;</span><br></pre></td></tr></table></figure><p>但是这个题目需要经过MD5加密，怎么绕过呢？orz。。<br>这里有个tip：原始MD5哈希在sql中很危险</p><p>看一下MD5()函数<br>语法：md5(string,raw)<br>参数：string： 必需。规定要计算的字符串。<br>        raw：可选。规定十六进制或二进制输出格式：<br>                   TRUE - 原始 16 字符二进制格式<br>                   FALSE - 默认。32 字符十六进制数</p><p>危险就在于MD5()函数的第二个参数true, If the second argument to MD5 is true, it will return ugly raw bits instead of a nice hex string(如果第二个参数为true，会返回原始值而不是16进制），raw MD5 hashes are dangerous in SQL statements because they can contain characters with special meaning to MySQL(原始值会包含mysql中的特殊字符，因此很危险）。</p><p>如果md5计算后的值经过hex转成字符串后为 ”or’xxx’这样的字符串就可以绕过。</p><p>网上搜到两个payload：<br>129581926211651571912466741651878684928<br>ffifdyop<br>ffifdyop  md5后，276f722736c95d99e921722cf9ed621<br>再转成字符串： <code>&#39;or&#39;6&lt;trash&gt;</code><br>查询语句就变成：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;6&lt;trash&gt;</span><br></pre></td></tr></table></figure><p>成功绕过登陆。<br>字符串是百度的，至于咋来的不懂，有老外的一篇文章<a href="http://www.am0s.com/html/md5%28%29.html" target="_blank" rel="noopener">&lt;传送门&gt;</a>。</p><p>关键利用点就是MD5()敏感函数，还是要多多积累这样的危险函数。<br>坚持写blog，要考试了，好好复习XD</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD&lt;br&gt;界面是这样的:&lt;br&gt; &lt;img src=&quot;/2018/07/05/sql注入--敏感函数 MD5()的利用/image1.png&quot; alt=&quot;login界面&quot;&gt;&lt;b
+      
+    
+    </summary>
+    
+      <category term="CTF-web" scheme="http://yoursite.com/categories/CTF-web/"/>
+    
+    
+      <category term="CTF" scheme="http://yoursite.com/tags/CTF/"/>
+    
+      <category term="web" scheme="http://yoursite.com/tags/web/"/>
+    
+      <category term="sql注入" scheme="http://yoursite.com/tags/sql%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="危险函数" scheme="http://yoursite.com/tags/%E5%8D%B1%E9%99%A9%E5%87%BD%E6%95%B0/"/>
+    
+  </entry>
   
   <entry>
     <title>sql约束攻击</title>

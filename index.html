@@ -276,6 +276,166 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql注入--敏感函数 MD5()的利用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="virtua1">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="virtua1's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/05/sql注入--敏感函数 MD5()的利用/" itemprop="url">sql注入--敏感函数 MD5()的利用</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-05T13:35:49+08:00">
+                2018-07-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF-web/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF-web</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD<br>界面是这样的:<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image1.png" alt="login界面"><br>看下源码：<br> <img src="/2018/07/05/sql注入--敏感函数 MD5()的利用/image2.png" alt="查看源码"><br>提交password 然后数据库查询，查询的时候用到这个 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">password = &apos;&quot;.md5($password,true).&quot;&apos;</span><br></pre></td></tr></table></figure>
+<p>假如查询语句是： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;$_post(password)&apos;&quot;;</span><br></pre></td></tr></table></figure>
+<p>我们很容易就绕过了–‘ or ‘1’=’1  或 ‘or 1=1;–</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;1&apos;=&apos;1&apos;&quot;;</span><br><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or 1=1;</span><br></pre></td></tr></table></figure>
+<p>但是这个题目需要经过MD5加密，怎么绕过呢？orz。。<br>这里有个tip：原始MD5哈希在sql中很危险</p>
+<p>看一下MD5()函数<br>语法：md5(string,raw)<br>参数：string： 必需。规定要计算的字符串。<br>        raw：可选。规定十六进制或二进制输出格式：<br>                   TRUE - 原始 16 字符二进制格式<br>                   FALSE - 默认。32 字符十六进制数</p>
+<p>危险就在于MD5()函数的第二个参数true, If the second argument to MD5 is true, it will return ugly raw bits instead of a nice hex string(如果第二个参数为true，会返回原始值而不是16进制），raw MD5 hashes are dangerous in SQL statements because they can contain characters with special meaning to MySQL(原始值会包含mysql中的特殊字符，因此很危险）。</p>
+<p>如果md5计算后的值经过hex转成字符串后为 ”or’xxx’这样的字符串就可以绕过。</p>
+<p>网上搜到两个payload：<br>129581926211651571912466741651878684928<br>ffifdyop<br>ffifdyop  md5后，276f722736c95d99e921722cf9ed621<br>再转成字符串： <code>&#39;or&#39;6&lt;trash&gt;</code><br>查询语句就变成：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;6&lt;trash&gt;</span><br></pre></td></tr></table></figure>
+<p>成功绕过登陆。<br>字符串是百度的，至于咋来的不懂，有老外的一篇文章<a href="http://www.am0s.com/html/md5%28%29.html" target="_blank" rel="noopener">&lt;传送门&gt;</a>。</p>
+<p>关键利用点就是MD5()敏感函数，还是要多多积累这样的危险函数。<br>坚持写blog，要考试了，好好复习XD</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    <div>
+      
+    </div>
+
+
+   
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql约束攻击/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -942,7 +1102,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">5</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -964,7 +1124,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
