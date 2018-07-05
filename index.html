@@ -384,6 +384,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo preg_replace(&quot;/texst/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);</span><br><span class="line">   echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst texst&quot;);都不会执</span><br></pre></td></tr></table></figure>
 <p>行，不满足第二个条件。</p>
 <p>5、漏洞防范：<br>将<code>&#39;test(&quot;/1&quot;)&#39;</code> 修改为<code>&quot;test(&#39;/1&#39;)&quot;</code>,这样<code>‘${phpinfo()}&#39;</code>就会被当做一个普通的字符串处理(单引号中的变量不会被处理)。</p>
+<p> ps:整理写完已经是第二天了，，，orz。 睡觉。。明天还得复习，come on 。。。。。。。。  </p>
 
           
         

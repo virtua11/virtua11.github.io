@@ -101,7 +101,7 @@
 <meta property="og:site_name" content="virtua1&#39;s blog">
 <meta property="og:description" content="晚自习在补警职的作业orz苦啊。。表哥在看书的时候遇到的一个小问题，和我分享了一下，想起以前也遇到过这个危险函数，没有总结。回到宿舍已经快熄灯了，等到查完寝，学习了一下，简要总结。网上文章也比较多，发现都是一样的。。。。。。。参考参考。 1、关于 preg_replace() 函数：preg_replace 函数执行一个正则表达式的搜索和替换语法： 1mixed preg_replace ( mi">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-05T17:06:44.453Z">
+<meta property="og:updated_time" content="2018-07-05T17:11:44.468Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="危险函数--preg_replace()">
 <meta name="twitter:description" content="晚自习在补警职的作业orz苦啊。。表哥在看书的时候遇到的一个小问题，和我分享了一下，想起以前也遇到过这个危险函数，没有总结。回到宿舍已经快熄灯了，等到查完寝，学习了一下，简要总结。网上文章也比较多，发现都是一样的。。。。。。。参考参考。 1、关于 preg_replace() 函数：preg_replace 函数执行一个正则表达式的搜索和替换语法： 1mixed preg_replace ( mi">
@@ -381,6 +381,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo preg_replace(&quot;/texst/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);</span><br><span class="line">   echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst texst&quot;);都不会执</span><br></pre></td></tr></table></figure>
 <p>行，不满足第二个条件。</p>
 <p>5、漏洞防范：<br>将<code>&#39;test(&quot;/1&quot;)&#39;</code> 修改为<code>&quot;test(&#39;/1&#39;)&quot;</code>,这样<code>‘${phpinfo()}&#39;</code>就会被当做一个普通的字符串处理(单引号中的变量不会被处理)。</p>
+<p> ps:整理写完已经是第二天了，，，orz。 睡觉。。明天还得复习，come on 。。。。。。。。  </p>
 
       
     </div>
