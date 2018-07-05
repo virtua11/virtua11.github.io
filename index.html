@@ -276,6 +276,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql约束攻击/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="virtua1">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="virtua1's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/05/sql约束攻击/" itemprop="url">sql约束攻击</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-05T09:32:24+08:00">
+                2018-07-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF-web/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF-web</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>昨天在做bugku的题的时候遇到一道sql约束攻击的题目，比较简单，但是感觉比较有意思，简单梳理一下。应该昨天发的，看大佬的博客看到一点多，太困了，就今天早上起来整理了一下XD。小假期结束了，要开始复习了orz~<br>参考大佬的博客：<a href="http://goodwaf.com/2016/12/30/%E5%9F%BA%E4%BA%8E%E7%BA%A6%E6%9D%9F%E6%9D%A1%E4%BB%B6%E7%9A%84SQL%E6%94%BB%E5%87%BB/" target="_blank" rel="noopener">传送门</a></p>
+<p><strong>sql约束攻击的思路：</strong><br>利用数据库对空格符的特殊处理方式来达到水平越权的目的。</p>
+<p><strong>知识背景：</strong></p>
+<p>1、字符串比较：在SQL中执行字符串处理时，字符串末尾的空格符将会被删除。换句话说“admin”等同于“admin空格”，对于绝大多数情况来说都是成立的（如WHERE子句中的字符串或INSERT语句中的字符串）例如以下语句的查询结果是一样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username=&apos;admin&apos;;</span><br><span class="line">SELECT * FROM users WHERE username=&apos;admin &apos;;</span><br></pre></td></tr></table></figure>
+<p>当然这种特性有时候也存在异常情况，例如LIKE子句。<br>PS:对尾部空白符的这种修剪操作，主要是在“字符串比较”时进行的。比较字符串时SQL会在内部使用空格来填充字符串，以便在比较之前使其它们的长度保持一致。因为在数据库中查询就是比较字符串，利用字符串这种比较特性，所以两者查询结果是一样的。</p>
+<p>2、INSERT截断：设计一个字段时，SQL都会根据VARCHAR(n)来限制字符串的最大长度。当实际输入的字符串大于最大长度的时候，数据库会对其进行截断。也就是说，如果字符串的长度大于“n”个字符的话，那么仅使用字符串的前“n”个字符。比如特定列的长度约束为“5”个字符，那么在插入字符串“admin空格x”时，实际上只能插入字符串的前5个字符，即“admin”。</p>
+<p><strong>利用场景：</strong></p>
+<p>1、场景：当我们需要登陆[admin]来获取想要的信息，但我们却不知道admin的密码的时候，我们可以注册[admin空格x] 用我们注册的登陆密码登陆admin，达到目的，注意注册的用户名无数空格后还有字符x，否则注册查询的时候会查重，空格个数要超过数据库的长度限制。</p>
+<p>2、代码：</p>
+<p>1）注册用户：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">// Checking whether a user with the same username exists</span><br><span class="line">$username = mysql_real_escape_string($_GET[&apos;username&apos;]);</span><br><span class="line">$password = mysql_real_escape_string($_GET[&apos;password&apos;]);</span><br><span class="line">$query = &quot;SELECT *</span><br><span class="line">          FROM users</span><br><span class="line">          WHERE username=&apos;$username&apos;&quot;;</span><br><span class="line">$res = mysql_query($query, $database);</span><br><span class="line">if($res) &#123;</span><br><span class="line">  if(mysql_num_rows($res) &gt; 0) &#123;</span><br><span class="line">    // User exists, exit gracefully</span><br><span class="line">    .</span><br><span class="line">    .</span><br><span class="line">  &#125;</span><br><span class="line">  else &#123;</span><br><span class="line">    // If not, only then insert a new entry</span><br><span class="line">    $query = &quot;INSERT INTO users(username, password)</span><br><span class="line">              VALUES (&apos;$username&apos;,&apos;$password&apos;)&quot;;</span><br><span class="line">    .</span><br><span class="line">    .</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由代码可知，我们注册时会先从数据库查询我们注册的username是否存在，如果存在就会报重，不存在就执行INSERT。我们用[admin空格x]注册，绕过username验证，执行INSERT，因为数据库对字符串长度进行了限制，所以实际插入的前几位，也就是注册的为[admin空格]，只要我们的空格足够多，就可以实现。</p>
+<p>2）验证登陆：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$username = mysql_real_escape_string($_GET[&apos;username&apos;]);</span><br><span class="line">$password = mysql_real_escape_string($_GET[&apos;password&apos;]);</span><br><span class="line">$query = &quot;SELECT username FROM users</span><br><span class="line">          WHERE username=&apos;$username&apos;</span><br><span class="line">              AND password=&apos;$password&apos; &quot;;</span><br><span class="line">$res = mysql_query($query, $database);</span><br><span class="line">if($res) &#123;</span><br><span class="line">  if(mysql_num_rows($res) &gt; 0)&#123;</span><br><span class="line">      $row = mysql_fetch_assoc($res);</span><br><span class="line">      return $row[&apos;username&apos;];</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">return Null;</span><br></pre></td></tr></table></figure>
+<p>可见登陆的时候可以利用[admin]和注册[admin空格]的密码来登陆，就可以绕过验证。</p>
+<p><strong>利用限制：</strong></p>
+<p>当然这种攻击是局限性的需要满足：<br>1、服务端没有对用户名长度进行限制。如果限制了我们就无法注册[admin空格x]。<br>2、登陆验证的SQL语句必须是用户名和密码一起验证。如果是验证流程是先根据用户名查找出对应的密码，然后再比对密码的话，那么也不能进行利用。因为当使用admin为用户名来查询密码的话，数据库此时就会返回两条记录，而一般取第一条则是目标用户的记录，那么你传输的密码肯定是和目标用户密码匹配不上的。<br>3、验证成功后返回的必须是用户传递进来的用户名，而不是从数据库取出的用户名。因为当我们以用户admin和密码登陆时，其实数据库返回的是我们自己的用户信息，而我们的用户名其实是[admin空格]，如果此后的业务逻辑以该用户名为准，那么就不能达到越权的目的了。</p>
+<p><strong>防御手段：</strong><br>我们可以利用限制条件来进行防御。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    <div>
+      
+    </div>
+
+
+   
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/03/“蓝帽杯”--第一次AWD之旅/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -777,7 +942,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -799,7 +964,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
