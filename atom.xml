@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>virtua1&#39;s blog</title>
   
-  <subtitle>web萌新</subtitle>
+  <subtitle>web | 萌新 | sql注入</subtitle>
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
