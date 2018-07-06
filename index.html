@@ -276,6 +276,169 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/07/CVE-2016-5734/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="virtua1">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="virtua1's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/07/CVE-2016-5734/" itemprop="url">CVE-2016-5734--preg_replace的危险姿势</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-07T01:01:17+08:00">
+                2018-07-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/漏洞实例/" itemprop="url" rel="index">
+                    <span itemprop="name">漏洞实例</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>昨天写完 preg_replace 危险函数，恰好今天看到两篇讲php危险函数和php隐藏后门的的文章，里边提到了‘preg_replace引发的phpmyadmin(4.3.0-4.6.2)命令执行漏洞’这篇文章<a href="http://0day5.com/archives/4016/" target="_blank" rel="noopener">&lt;传送门&gt;</a>，根据这篇文章看一下实例中这个函数的危险姿势。</p>
+<p>0x00漏洞触发原理</p>
+<p>前一篇笔记已经说到了这个漏洞触发的原理，即：</p>
+<pre><code>1. 第一个参数需要e标识符，有了它可以执行第二个参数的命令
+2. 第一个参数需要在第三个参数中的中有匹配，不然echo会返回第三个参数而不执行命令
+</code></pre><p>如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//echo preg_replace(‘/test/e’, ‘phpinfo()’, ‘just test’);这样是可以执行命令的，第一个参数有e标识符，并且第一个参数在第三个参数中有匹配。</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//echo preg_replace(‘/test/e’, ‘phpinfo()’, ‘just tesxt’); 或者echo preg_replace(‘/tesxt/e’, ‘phpinfo()’, ‘just test’); 虽然第一个参数有e标识符，但是第一个参数在第三个参数中没有匹配，返回第三个参数，不执行。</span><br></pre></td></tr></table></figure>
+<p>0x01触发漏洞位置回溯</p>
+<p>问题出现在<code>/libraries/TableSearch.class.php</code>中的<code>_getRegexReplaceRows</code>函数，我们全局搜索发现：<br> <img src="/2018/07/07/CVE-2016-5734/1.png" alt="这里写图片描述"><br>我们可以发现，<code>$find 和$replacewith</code> 在<code>preg_replace()</code>函数中被引用了</p>
+<p>追踪一下 发现<code>getReplacePreview</code>调用了<code>_getRegexReplaceRows</code>函数<br> <img src="/2018/07/07/CVE-2016-5734/2.png" alt="这里写图片描述"><br>全局搜索发现 在<code>/tbl_find_replace.php</code> 调用 <code>getReplacePreview：</code>我们可以发现<code>find</code> 和 <code>replaceWith</code>都是通过post方式提交的。<br> <img src="/2018/07/07/CVE-2016-5734/3.png" alt="这里写图片描述"> </p>
+<p>0x02漏洞利用</p>
+<p>这个漏洞目前没法直接利用，因为有token限制，需要登陆抓到token。<br>需要构造第三个参数保证和第一个参数匹配，第一个参数可控，但是第三个参数是从数据库中取出的，我们只能提前插入到数据库中，然后再取出来，columnIndex是取出字段值的可控，所以第三个参数也可控了。</p>
+<p> 构</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//$find = ’0/e’;</span><br><span class="line">//$fromsqldata = ’0/e’;</span><br><span class="line">//echo preg_replace(“/”.$find.”\0/”,$_POST[&quot;replaceWith&quot;],$fromsqldata);</span><br><span class="line">//preg_replace(‘/0/e’,&apos;phpinfo()’,’0/e‘);</span><br></pre></td></tr></table></figure>
+<p> 小结：按照原文写了写，主要是为了加深理解。复现的过程中出现了问题，除了漏洞本身，主要是学到这种分析代码的过程。。</p>
+<p> 太累了。。又会是一个忙碌的周末orz。。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    <div>
+      
+    </div>
+
+
+   
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/06/代码执行漏洞--preg_replace()/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1264,7 +1427,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1275,7 +1438,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1286,7 +1449,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
