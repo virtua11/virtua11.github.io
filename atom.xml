@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-07-10T12:46:02.577Z</updated>
+  <updated>2018-07-10T12:57:24.084Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,38 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>文件解析漏洞</title>
+    <link href="http://yoursite.com/2018/07/10/%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E/"/>
+    <id>http://yoursite.com/2018/07/10/文件解析漏洞/</id>
+    <published>2018-07-10T12:55:29.667Z</published>
+    <updated>2018-07-10T12:57:24.084Z</updated>
+    
+    <content type="html"><![CDATA[<p>解析漏洞是文件上传漏洞的基础，要更好的学习文件上传漏洞，应该先了解解析漏洞。<br>目前常见的web容器有 IIS、nginx、apache、Tomcat等。<br>Web容器作为终端用来解析用户请求和脚本语言。</p><p>IIS解析漏洞</p><ol><li>x.asa、x.asp文件夹下的任何文件都当作asp文件来解析。</li><li>文件名为x.asp;1.jpg的文件当作asp文件来执行。</li><li><p>WebDav 漏洞</p><p>Apache解析漏洞<br>1.php.rar 本应该是弹出rar的下载框 但此时却不会，会直接显示1.php.rar的内容若包含命令，则会执行，比如：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php phpinfo()?&gt;</span><br></pre></td></tr></table></figure></li></ol><p>会直接显示phpinfo（）的内容<br>Apache解析文件的规则：遇到不认识的扩展名时，会从后向前解析，知道认识扩展名为止，若都不认识，则会暴露源代码。</p><p>Nginx 解析漏洞<br>最先出现在nginx容器：1.jpg/1.php 会当作php文件来执行。1.php不存在，也可以任意命名。可以上传木马图片，在url后加上/1.php，得到webshell。但是这种漏洞不一定都存在nginx 容器，IIS等容器中也出现过，实质是php配置中 cgi.fi:x_pathinfo 默认开启，x.php不存在，就会向前递归解析。</p><p>附：制作木马图片的方法<br>1、1.jpg图片 大小小于100kb<br>2、一句话木马 php<br>3、cmd copy 1.jpg/b + 1.php 2.php</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;解析漏洞是文件上传漏洞的基础，要更好的学习文件上传漏洞，应该先了解解析漏洞。&lt;br&gt;目前常见的web容器有 IIS、nginx、apache、Tomcat等。&lt;br&gt;Web容器作为终端用来解析用户请求和脚本语言。&lt;/p&gt;
+&lt;p&gt;IIS解析漏洞&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;x.
+      
+    
+    </summary>
+    
+      <category term="CTF-web" scheme="http://yoursite.com/categories/CTF-web/"/>
+    
+    
+      <category term="CTF" scheme="http://yoursite.com/tags/CTF/"/>
+    
+      <category term="web" scheme="http://yoursite.com/tags/web/"/>
+    
+      <category term="文件解析漏洞" scheme="http://yoursite.com/tags/%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E/"/>
+    
+  </entry>
   
   <entry>
     <title>变量覆盖漏洞</title>
