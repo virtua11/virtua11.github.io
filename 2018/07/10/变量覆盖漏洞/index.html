@@ -80,7 +80,7 @@
 
 
 
-  <meta name="keywords" content="CTF,web,sql注入,危险函数," />
+  <meta name="keywords" content="CTF,web,变量覆盖漏洞," />
 
 
 
@@ -93,21 +93,18 @@
 
 
 
-<meta name="description" content="突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD界面是这样的: 看下源码： 提交password 然后数据库查询，查询的时候用到这个  1password = &amp;apos;&amp;quot;.md5($password,true).&amp;quot;&amp;apos; 假如查询语句是：  1$sql = &amp;quot;SELECT * FROM admin WHER">
-<meta name="keywords" content="CTF,web,sql注入,危险函数">
+<meta name="description" content="0x00前段时间做题遇到很多关于变量覆盖漏洞的问题，想好好整理一下，把之前做题和看文章中遇到过的好好研究一下，简单记录一下。变量覆盖漏洞就是用自定义的参数值替换原有的变量值导致漏洞的产生。导致这种漏洞的本质是函数使用不当。 0x01经常引起变量覆盖漏洞的原因(函数)有：开启了全局变量注册、$$使用不当、extract()函数使用不当、parse_str()函数使用不当、import_request">
+<meta name="keywords" content="CTF,web,变量覆盖漏洞">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sql注入--敏感函数 MD5()的利用">
-<meta property="og:url" content="http://yoursite.com/2018/07/05/sql注入--敏感函数/index.html">
+<meta property="og:title" content="变量覆盖漏洞">
+<meta property="og:url" content="http://yoursite.com/2018/07/10/变量覆盖漏洞/index.html">
 <meta property="og:site_name" content="virtua1&#39;s blog">
-<meta property="og:description" content="突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD界面是这样的: 看下源码： 提交password 然后数据库查询，查询的时候用到这个  1password = &amp;apos;&amp;quot;.md5($password,true).&amp;quot;&amp;apos; 假如查询语句是：  1$sql = &amp;quot;SELECT * FROM admin WHER">
+<meta property="og:description" content="0x00前段时间做题遇到很多关于变量覆盖漏洞的问题，想好好整理一下，把之前做题和看文章中遇到过的好好研究一下，简单记录一下。变量覆盖漏洞就是用自定义的参数值替换原有的变量值导致漏洞的产生。导致这种漏洞的本质是函数使用不当。 0x01经常引起变量覆盖漏洞的原因(函数)有：开启了全局变量注册、$$使用不当、extract()函数使用不当、parse_str()函数使用不当、import_request">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/07/05/sql注入--敏感函数/敏感函数1/image1.png">
-<meta property="og:image" content="http://yoursite.com/2018/07/05/sql注入--敏感函数/敏感函数2/image2.png">
-<meta property="og:updated_time" content="2018-07-05T05:52:15.999Z">
+<meta property="og:updated_time" content="2018-07-10T12:34:52.747Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="sql注入--敏感函数 MD5()的利用">
-<meta name="twitter:description" content="突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD界面是这样的: 看下源码： 提交password 然后数据库查询，查询的时候用到这个  1password = &amp;apos;&amp;quot;.md5($password,true).&amp;quot;&amp;apos; 假如查询语句是：  1$sql = &amp;quot;SELECT * FROM admin WHER">
-<meta name="twitter:image" content="http://yoursite.com/2018/07/05/sql注入--敏感函数/敏感函数1/image1.png">
+<meta name="twitter:title" content="变量覆盖漏洞">
+<meta name="twitter:description" content="0x00前段时间做题遇到很多关于变量覆盖漏洞的问题，想好好整理一下，把之前做题和看文章中遇到过的好好研究一下，简单记录一下。变量覆盖漏洞就是用自定义的参数值替换原有的变量值导致漏洞的产生。导致这种漏洞的本质是函数使用不当。 0x01经常引起变量覆盖漏洞的原因(函数)有：开启了全局变量注册、$$使用不当、extract()函数使用不当、parse_str()函数使用不当、import_request">
 
 
 
@@ -137,13 +134,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/07/05/sql注入--敏感函数/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/07/10/变量覆盖漏洞/"/>
 
 
 
 
 
-  <title>sql注入--敏感函数 MD5()的利用 | virtua1's blog</title>
+  <title>变量覆盖漏洞 | virtua1's blog</title>
   
 
 
@@ -314,7 +311,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/05/sql注入--敏感函数/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/10/变量覆盖漏洞/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="virtua1">
@@ -331,7 +328,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">sql注入--敏感函数 MD5()的利用</h1>
+          <h1 class="post-title" itemprop="name headline">变量覆盖漏洞</h1>
         
 
         <div class="post-meta">
@@ -343,8 +340,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-05T13:35:49+08:00">
-                2018-07-05
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-10T20:27:38+08:00">
+                2018-07-10
               </time>
             
 
@@ -403,20 +400,26 @@
       
 
       
-        <p>突然想到很久前做的实验吧上的一道很有意思的注入题，当时看的大佬的wp，也不是很懂，今天就再看一下XD<br>界面是这样的:<br> <img src="敏感函数1/image1.png" alt=""><br>看下源码：<br> <img src="敏感函数2/image2.png" alt=""><br>提交password 然后数据库查询，查询的时候用到这个 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">password = &apos;&quot;.md5($password,true).&quot;&apos;</span><br></pre></td></tr></table></figure>
-<p>假如查询语句是： </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;$_post(password)&apos;&quot;;</span><br></pre></td></tr></table></figure>
-<p>我们很容易就绕过了–‘ or ‘1’=’1  或 ‘or 1=1;–</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;1&apos;=&apos;1&apos;&quot;;</span><br><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or 1=1;</span><br></pre></td></tr></table></figure>
-<p>但是这个题目需要经过MD5加密，怎么绕过呢？orz。。<br>这里有个tip：原始MD5哈希在sql中很危险</p>
-<p>看一下MD5()函数<br>语法：md5(string,raw)<br>参数：string： 必需。规定要计算的字符串。<br>        raw：可选。规定十六进制或二进制输出格式：<br>                   TRUE - 原始 16 字符二进制格式<br>                   FALSE - 默认。32 字符十六进制数</p>
-<p>危险就在于MD5()函数的第二个参数true, If the second argument to MD5 is true, it will return ugly raw bits instead of a nice hex string(如果第二个参数为true，会返回原始值而不是16进制），raw MD5 hashes are dangerous in SQL statements because they can contain characters with special meaning to MySQL(原始值会包含mysql中的特殊字符，因此很危险）。</p>
-<p>如果md5计算后的值经过hex转成字符串后为 ”or’xxx’这样的字符串就可以绕过。</p>
-<p>网上搜到两个payload：<br>129581926211651571912466741651878684928<br>ffifdyop<br>ffifdyop  md5后，276f722736c95d99e921722cf9ed621<br>再转成字符串： <code>&#39;or&#39;6&lt;trash&gt;</code><br>查询语句就变成：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$sql = &quot;SELECT * FROM admin WHERE username = &apos;admin&apos; and password = &apos;&apos;or &apos;6&lt;trash&gt;</span><br></pre></td></tr></table></figure>
-<p>成功绕过登陆。<br>字符串是百度的，至于咋来的不懂，有老外的一篇文章<a href="http://www.am0s.com/html/md5%28%29.html" target="_blank" rel="noopener">&lt;传送门&gt;</a>。</p>
-<p>关键利用点就是MD5()敏感函数，还是要多多积累这样的危险函数。<br>坚持写blog，要考试了，好好复习XD</p>
+        <p>0x00<br>前段时间做题遇到很多关于变量覆盖漏洞的问题，想好好整理一下，把之前做题和看文章中遇到过的好好研究一下，简单记录一下。<br>变量覆盖漏洞就是用自定义的参数值替换原有的变量值导致漏洞的产生。导致这种漏洞的本质是函数使用不当。</p>
+<p>0x01<br>经常引起变量覆盖漏洞的原因(函数)有：开启了全局变量注册、$$使用不当、extract()函数使用不当、parse_str()函数使用不当、import_request_variables()函数使用不当.</p>
+<p>0x02 全局变量覆盖<br>全局变量覆盖的关键是register_globals<br>register_globals的意思就是注册为全局变量。当register_globals=On，用户传递的值会被直接的注册为全局变量直接使用；register_globals==Off，需要到特定的数组里去得到它。也就是说为on的时候，变量可以从各个地方传来，当为off的时候，不会有问题。<br>示例代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">echo &quot;Register_globals: &quot;.(int)ini_get(&quot;register_globals&quot;).&quot;&lt;br/&gt;&quot;;</span><br><span class="line"></span><br><span class="line">if ($auth)&#123;</span><br><span class="line">echo &quot;private!&quot;;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>当register_globals=On提交?auth=1时，$auth会被赋值为1。<br>ps：如果已经对$auth变量赋了初始值，即使提交也不会覆盖。</p>
+<p>0x03 \$\$导致的变量覆盖漏洞<br>\$\$导致变量覆盖的问题在于foreach() foreach遍历数组中的值，然后将获取到的数组键名作为变量，数组中的键值作为变量的值，所以就产生了变量覆盖漏洞。<br>示例代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">// ?name=test</span><br><span class="line">// output:string(4) “name” string(4) “test” string(4) “test” test</span><br><span class="line">$name=’thinking’;</span><br><span class="line">foreach ($_GET as $key =&gt; $value)</span><br><span class="line">$$key = $value;</span><br><span class="line">var_dump($key);</span><br><span class="line">var_dump($value);</span><br><span class="line">var_dump($$key);</span><br><span class="line"></span><br><span class="line">echo $name;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>例题（iscc2018）<br>源码</p>
+<p>代码的大体意思是包含flag.php 满足三个条件才可以得到flag .，两个foreach对$$key的处理是不一样的，满足条件会打印出flag。可以看到有两个foreach,中间代码会将$flag值覆盖掉<br>我们的思路是把$flag的值赋值给$_200或$_403 然后利用die(200)或die(403)打印出来。<br>payload: GET: ?_200=flag<br>              POST: flag=aaaaaaaaaaaaaaa</p>
+<p>0x04 extract()函数导致的变量覆盖漏洞<br>extract() 该函数使用数组键名作为变量名，使用数组键值作为变量值。针对数组中的每个元素，将在当前符号表中创建对应的一个变量。<br>函数语法： extract(array,extract_rules,prefix)</p>
+<p>例题：(bugku)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$flag=&apos;xxx&apos;;</span><br><span class="line">extract($_GET);</span><br><span class="line">if(isset($shiyan))</span><br><span class="line">&#123;</span><br><span class="line">$content=trim(file_get_contents($flag));</span><br><span class="line">if($shiyan==$content)</span><br><span class="line">&#123;</span><br><span class="line">echo&apos;flag&#123;xxx&#125;&apos;;</span><br><span class="line">&#125;</span><br><span class="line">else</span><br><span class="line">&#123;</span><br><span class="line">echo&apos;Oh.no&apos;;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>用extract($_GET) 接收了GET请求中的数据，并将键名和键值转换为变量名和变量的值，然后再进行两个if 的条件判断，所以可以使用GET提交参数和值，利用extract()对变量进行覆盖，从而满足各个条件。<br>payload：?flag=&amp;shiyan=<br>这里是把 flag和shiyan的值都覆盖为空，从而相等。</p>
+<p>0X05   parse_str()函数导致的变量覆盖漏洞<br>parse_str() 函数把查询字符串解析到变量中。 如果未设置 array 参数，由该函数设置的变量将覆盖已存在的同名变量。<br>语法：parse_str(string,array)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">error_reporting(0);</span><br><span class="line">if (empty($_GET[&apos;id&apos;])) &#123;</span><br><span class="line">    show_source(__FILE__);</span><br><span class="line">    die();</span><br><span class="line">&#125; else &#123;</span><br><span class="line">   include (‘flag.php’);</span><br><span class="line">    $a = “www.OPENCTF.com”;</span><br><span class="line">    $id = $_GET[&apos;id&apos;];</span><br><span class="line">   @parse_str($id);</span><br><span class="line">   if ($a[0] != ‘QNKCDZO’ &amp;&amp; md5($a[0]) == md5(‘QNKCDZO’)) &#123;</span><br><span class="line">      echo $flag;</span><br><span class="line">   &#125; else &#123;</span><br><span class="line">      exit(‘其实很简单其实并不难！’);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>分析代码：<br>get提交id。利用parse_str()函数处理，然后if比较，\$a[0] != ‘QNKCDZO’ &amp;&amp; md5($a[0]) == md5(‘QNKCDZO’)满足 则打印flag<br>这里利用的是 php弱语言特性，需要一个MD5后以0e开头的才能够返回true。<br>这样的值很多，提交：?id=a[0]=240610708<br>与parse_str()类似的函数还有mb_parse_str()</p>
+<p>0x06  import_request_variables()函数导致的变量覆盖漏洞<br>import_request_variables — 将 GET／POST／Cookie 变量导入到全局作用域中<br>示例代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$auth = &apos;0&apos;;</span><br><span class="line">import_request_variables(&apos;G&apos;);</span><br><span class="line">if($auth == 1)&#123;</span><br><span class="line">echo &quot;private!&quot;;</span><br><span class="line">&#125;else&#123;</span><br><span class="line">echo &quot;public!&quot;;</span><br><span class="line">&#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>import_request_variables(‘G’)指定导入GET请求中的变量，从而导致变量覆盖。</p>
+<p>查阅资料，也参考了很多大佬的文章，还要多多积累，CTF中积累小的代码审计，才能审计cms，还要不断地理解。</p>
 
       
     </div>
@@ -449,9 +452,7 @@
           
             <a href="/tags/web/" rel="tag"><i class="fa fa-tag"></i> web</a>
           
-            <a href="/tags/sql注入/" rel="tag"><i class="fa fa-tag"></i> sql注入</a>
-          
-            <a href="/tags/危险函数/" rel="tag"><i class="fa fa-tag"></i> 危险函数</a>
+            <a href="/tags/变量覆盖漏洞/" rel="tag"><i class="fa fa-tag"></i> 变量覆盖漏洞</a>
           
         </div>
       
@@ -464,8 +465,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/07/05/sql约束攻击/" rel="next" title="sql约束攻击">
-                <i class="fa fa-chevron-left"></i> sql约束攻击
+              <a href="/2018/07/09/代码执行函数总结/" rel="next" title="代码审计--代码执行函数总结">
+                <i class="fa fa-chevron-left"></i> 代码审计--代码执行函数总结
               </a>
             
           </div>
@@ -473,10 +474,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/07/06/代码执行漏洞--preg_replace()/" rel="prev" title="代码执行函数--preg_replace()">
-                代码执行函数--preg_replace() <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
